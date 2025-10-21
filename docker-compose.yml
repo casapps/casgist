@@ -1,0 +1,81 @@
+# CasGists Docker Compose - Production Configuration
+# BASE SPEC Compliant: Binds to 172.17.0.1 for security
+
+name: casgists
+
+services:
+  casgists:
+    image: ghcr.io/casapps/casgists:latest
+    container_name: casgists
+    restart: unless-stopped
+    ports:
+      - "172.17.0.1:64080:80"  # Production: bind to Docker bridge for reverse proxy
+    environment:
+      # Database - PostgreSQL for production
+      - CASGISTS_DB_TYPE=postgres
+      - CASGISTS_DB_DSN=postgres://casgists:${POSTGRES_PASSWORD:-casgists}@postgres:5432/casgists?sslmode=disable
+
+      # Server
+      - CASGISTS_DATA_DIR=/data
+      - CASGISTS_LOG_DIR=/var/log/casgists
+      - CASGISTS_SECRET_KEY=${SECRET_KEY}
+
+      # Features
+      - CASGISTS_FEATURES_REGISTRATION=true
+      - CASGISTS_FEATURES_ORGANIZATIONS=true
+
+      # Cache - Valkey for production
+      - CASGISTS_CACHE_TYPE=valkey
+      - CASGISTS_CACHE_URL=valkey://valkey:6379
+    volumes:
+      - ./rootfs/data/casgists:/data
+      - ./rootfs/config/casgists:/config
+    depends_on:
+      - postgres
+      - valkey
+    networks:
+      - casgists
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: casgists_postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=casgists
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-casgists}
+      - POSTGRES_DB=casgists
+    volumes:
+      - ./rootfs/db/postgres:/var/lib/postgresql/data
+    networks:
+      - casgists
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U casgists"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  valkey:
+    image: valkey/valkey:7-alpine
+    container_name: casgists_valkey
+    restart: unless-stopped
+    command: valkey-server --appendonly yes --requirepass ${VALKEY_PASSWORD:-casgists}
+    volumes:
+      - ./rootfs/db/valkey:/data
+    networks:
+      - casgists
+    healthcheck:
+      test: ["CMD", "valkey-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  casgists:
+    driver: bridge
+    external: false

@@ -1,0 +1,37 @@
+# CasGists Docker Compose - Development Configuration
+# BASE SPEC Compliant: Binds to 172.17.0.1 for security
+
+name: casgists
+
+services:
+  casgists:
+    container_name: casgists-dev
+    restart: unless-stopped
+    ports:
+      - "172.17.0.1:64188:80"
+    environment:
+      # Server
+      - CASGISTS_DATA_DIR=/data
+      - CASGISTS_LOG_DIR=/var/log/casgists
+      - CASGISTS_SECRET_KEY=${SECRET_KEY}
+
+      # Features
+      - CASGISTS_FEATURES_REGISTRATION=true
+      - CASGISTS_FEATURES_ORGANIZATIONS=true
+
+    volumes:
+      - /tmp/casapps/casgists/rootfs/data/casgists:/data
+      - /tmp/casapps/casgists/rootfs/config/casgists:/config
+    networks:
+      - casgists
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  casgists:
+    driver: bridge
+    external: false

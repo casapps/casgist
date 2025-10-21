@@ -1,0 +1,157 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{if .Title}}{{.Title}} - {{end}}CasGists</title>
+    <meta name="description" content="{{if .Description}}{{.Description}}{{else}}Self-hosted GitHub Gists alternative{{end}}">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    
+    <!-- CSS -->
+    <link href="/static/css/tailwind.css" rel="stylesheet">
+    <link href="/static/css/app.css" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    {{block "head" .}}{{end}}
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <!-- Logo -->
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="/" class="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+                            <i class="fas fa-code mr-2"></i>CasGists
+                        </a>
+                    </div>
+                    
+                    <!-- Main Navigation -->
+                    <div class="hidden sm:ml-8 sm:flex sm:space-x-6">
+                        <a href="/discover" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                            <i class="fas fa-compass mr-1"></i> Discover
+                        </a>
+                        {{if .User}}
+                        <a href="/gists" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                            <i class="fas fa-file-code mr-1"></i> My Gists
+                        </a>
+                        {{end}}
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Search -->
+                    <form action="/search" method="GET" class="hidden lg:block">
+                        <div class="relative">
+                            <input type="text" name="q" placeholder="Search gists..." 
+                                   class="w-64 px-4 py-2 pl-10 pr-4 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                    </form>
+                    
+                    {{if .User}}
+                    <!-- Create Button -->
+                    <a href="/gists/new" class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-plus mr-1"></i> New Gist
+                    </a>
+                    
+                    <!-- User Menu -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <img class="h-8 w-8 rounded-full" src="{{.User.AvatarURL}}" alt="{{.User.Username}}">
+                        </button>
+                        
+                        <div x-show="open" @click.away="open = false" x-transition 
+                             class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5">
+                            <div class="py-1">
+                                <a href="/users/{{.User.Username}}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    <i class="fas fa-user mr-2"></i> Profile
+                                </a>
+                                <a href="/settings" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    <i class="fas fa-cog mr-2"></i> Settings
+                                </a>
+                                {{if .User.IsAdmin}}
+                                <a href="/admin" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    <i class="fas fa-shield-alt mr-2"></i> Admin
+                                </a>
+                                {{end}}
+                                <hr class="my-1 border-gray-200 dark:border-gray-600">
+                                <form action="/logout" method="POST">
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {{else}}
+                    <!-- Login/Register -->
+                    <a href="/login" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                        Login
+                    </a>
+                    <a href="/register" class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Register
+                    </a>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main>
+        {{block "content" .}}{{end}}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                    © 2024 CasGists - Self-hosted with ❤️
+                </div>
+                <div class="flex space-x-6">
+                    <a href="/docs" class="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                        Documentation
+                    </a>
+                    <a href="/api/v1/docs" class="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                        API
+                    </a>
+                    <a href="/status" class="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                        Status
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Alpine.js for dropdowns -->
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script>
+    
+    <!-- Page Scripts -->
+    {{block "scripts" .}}{{end}}
+</body>
+</html>
+{{end}}

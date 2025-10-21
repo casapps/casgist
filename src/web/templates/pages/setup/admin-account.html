@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}} - CasGists</title>
+    <link href="/static/css/tailwind.css" rel="stylesheet">
+    <style>
+        /* Custom animations */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="min-h-screen flex flex-col items-center justify-center px-4">
+        <!-- Setup Progress Indicator -->
+        <div class="w-full max-w-md mb-8">
+            <div class="flex items-center justify-center space-x-2">
+                <div class="w-3 h-3 bg-blue-600 rounded-full"></div>
+                <div class="w-16 h-1 bg-blue-600 rounded"></div>
+                <div class="w-3 h-3 bg-blue-600 rounded-full animate-pulse"></div>
+                <div class="w-16 h-1 bg-gray-600 rounded"></div>
+                <div class="w-3 h-3 bg-gray-600 rounded-full"></div>
+            </div>
+            <p class="text-center text-gray-400 text-sm mt-2">Step 2 of 3</p>
+        </div>
+
+        <!-- Main Setup Card -->
+        <div class="bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md slide-in">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold text-white mb-2">🎉 Welcome to CasGists!</h1>
+                <p class="text-gray-400">
+                    You're the first user on this server. To complete the setup, 
+                    we need to create a separate administrator account for server management.
+                </p>
+            </div>
+
+            <!-- Admin Account Creation Form -->
+            <form id="admin-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        Create Administrator Account:
+                    </label>
+                </div>
+
+                <!-- Username -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Username</label>
+                    <input type="text" 
+                           id="username" 
+                           name="username" 
+                           value="{{.default_username}}"
+                           class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           required>
+                    <p class="text-xs text-gray-400 mt-1">Default, can be changed</p>
+                </div>
+
+                <!-- Password Option -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Password:</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="radio" name="password_option" value="generate" id="generate-password" checked
+                                   class="mr-2 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500">
+                            <span class="text-sm">⚪ Generate secure password</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="password_option" value="custom" id="custom-password"
+                                   class="mr-2 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500">
+                            <span class="text-sm">⚪ Custom password</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Custom Password Fields (Hidden by default) -->
+                <div id="custom-password-fields" class="hidden space-y-3">
+                    <div>
+                        <input type="password" 
+                               id="password" 
+                               name="password" 
+                               placeholder="Password"
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               minlength="12">
+                        <p class="text-xs text-gray-400 mt-1">Minimum 12 characters</p>
+                    </div>
+                    <div>
+                        <input type="password" 
+                               id="password-confirm" 
+                               name="password_confirm" 
+                               placeholder="Confirm Password"
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="text-xs text-gray-400">
+                        <p>Requirements: ✅ 12+ characters ✅ Uppercase ✅ Lowercase ✅ Number</p>
+                    </div>
+                </div>
+
+                <!-- Generated Password Warning -->
+                <div id="generate-password-warning" class="bg-yellow-900 border border-yellow-600 rounded-md p-3">
+                    <p class="text-yellow-200 text-sm">
+                        ⚠️ Generated password will only be shown once - copy it immediately!
+                    </p>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                    <input type="email" 
+                           id="email" 
+                           name="email" 
+                           class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           required>
+                </div>
+
+                <!-- Display Name (Optional) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Display Name (Optional)</label>
+                    <input type="text" 
+                           id="display_name" 
+                           name="display_name" 
+                           class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" 
+                        id="submit-btn"
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors">
+                    Create Admin Account & Continue Setup
+                </button>
+            </form>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="hidden text-center py-4">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p class="text-gray-400 mt-2">Creating administrator account...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="error-message" class="hidden bg-red-900 border border-red-600 rounded-md p-3 mt-4">
+                <p class="text-red-200 text-sm" id="error-text"></p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-gray-500 text-sm">
+            <p>Powered by <strong class="text-blue-400">CasGists</strong></p>
+        </div>
+    </div>
+
+    <!-- Generated Password Modal -->
+    <div id="password-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center px-4 z-50">
+        <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <div class="text-center mb-4">
+                <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white">✅ Administrator account created successfully!</h3>
+            </div>
+
+            <div class="bg-yellow-900 border border-yellow-600 rounded-md p-4 mb-4">
+                <h4 class="font-medium text-yellow-200 mb-2">🔑 Your Generated Password:</h4>
+                <div class="flex items-center space-x-2">
+                    <input type="text" 
+                           id="generated-password-display" 
+                           readonly 
+                           class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white font-mono text-sm">
+                    <button id="copy-password-btn" 
+                            class="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+                        Copy
+                    </button>
+                </div>
+                <p class="text-yellow-200 text-sm mt-2">⚠️ Save this password now - it won't be shown again!</p>
+            </div>
+
+            <div class="text-center">
+                <p class="text-gray-300 mb-4">🔄 Switching to administrator account...</p>
+                <p class="text-gray-400 text-sm">Starting server configuration wizard...</p>
+            </div>
+
+            <div class="flex justify-center mt-6">
+                <button id="continue-setup-btn" 
+                        class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                    Continue to Setup Wizard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('admin-form');
+            const customPasswordFields = document.getElementById('custom-password-fields');
+            const generatePasswordWarning = document.getElementById('generate-password-warning');
+            const loadingState = document.getElementById('loading-state');
+            const errorMessage = document.getElementById('error-message');
+            const passwordModal = document.getElementById('password-modal');
+            
+            // Handle password option change
+            document.querySelectorAll('input[name="password_option"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customPasswordFields.classList.remove('hidden');
+                        generatePasswordWarning.classList.add('hidden');
+                    } else {
+                        customPasswordFields.classList.add('hidden');
+                        generatePasswordWarning.classList.remove('hidden');
+                    }
+                });
+            });
+
+            // Handle form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                const data = {
+                    username: formData.get('username'),
+                    email: formData.get('email'),
+                    display_name: formData.get('display_name'),
+                    generate_password: formData.get('password_option') === 'generate'
+                };
+
+                if (!data.generate_password) {
+                    data.password = formData.get('password');
+                    
+                    // Validate password confirmation
+                    if (data.password !== formData.get('password_confirm')) {
+                        showError('Passwords do not match');
+                        return;
+                    }
+                }
+
+                // Show loading state
+                form.classList.add('hidden');
+                loadingState.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+
+                // Submit to server
+                fetch('/setup/admin-account', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.generated_password) {
+                        showGeneratedPasswordModal(result.generated_password, result.login_token);
+                    } else {
+                        // Custom password - redirect to setup wizard
+                        window.location.href = '/setup/wizard';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError('Failed to create administrator account. Please try again.');
+                    form.classList.remove('hidden');
+                    loadingState.classList.add('hidden');
+                });
+            });
+
+            function showError(message) {
+                document.getElementById('error-text').textContent = message;
+                errorMessage.classList.remove('hidden');
+            }
+
+            function showGeneratedPasswordModal(password, token) {
+                document.getElementById('generated-password-display').value = password;
+                passwordModal.classList.remove('hidden');
+
+                // Copy password functionality
+                document.getElementById('copy-password-btn').addEventListener('click', function() {
+                    navigator.clipboard.writeText(password);
+                    this.textContent = 'Copied!';
+                    this.classList.add('bg-green-600');
+                    setTimeout(() => {
+                        this.textContent = 'Copy';
+                        this.classList.remove('bg-green-600');
+                    }, 2000);
+                });
+
+                // Continue to setup wizard
+                document.getElementById('continue-setup-btn').addEventListener('click', function() {
+                    // Set auth token and redirect
+                    localStorage.setItem('auth_token', token);
+                    window.location.href = '/setup/wizard';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

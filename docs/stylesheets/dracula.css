@@ -1,0 +1,48 @@
+/* Dracula Theme for MkDocs Material */
+:root {
+  --md-primary-fg-color: #bd93f9;
+  --md-primary-fg-color--light: #ff79c6;
+  --md-primary-fg-color--dark: #6272a4;
+}
+
+[data-md-color-scheme="dracula"] {
+  --md-default-fg-color: #f8f8f2;
+  --md-default-bg-color: #282a36;
+  --md-code-fg-color: #f8f8f2;
+  --md-code-bg-color: #44475a;
+  --md-code-hl-color: #ffb86c;
+  --md-accent-fg-color: #ff79c6;
+  --md-accent-fg-color--transparent: rgba(255, 121, 198, 0.1);
+  --md-typeset-a-color: #8be9fd;
+  --md-typeset-mark-color: #ffb86c;
+  --md-typeset-kbd-color: #6272a4;
+  --md-admonition-fg-color: #f8f8f2;
+  --md-admonition-bg-color: #44475a;
+}
+
+[data-md-color-scheme="dracula"] .md-header {
+  background-color: #44475a;
+}
+
+[data-md-color-scheme="dracula"] .md-nav__link--active {
+  color: #ff79c6;
+}
+
+[data-md-color-scheme="dracula"] .md-typeset code {
+  background-color: #44475a;
+  color: #50fa7b;
+}
+
+[data-md-color-scheme="dracula"] .md-typeset pre {
+  background-color: #282a36;
+}
+
+[data-md-color-scheme="dracula"] .highlight .o { color: #ff79c6; }
+[data-md-color-scheme="dracula"] .highlight .k { color: #ff79c6; }
+[data-md-color-scheme="dracula"] .highlight .kn { color: #ff79c6; }
+[data-md-color-scheme="dracula"] .highlight .s { color: #f1fa8c; }
+[data-md-color-scheme="dracula"] .highlight .n { color: #f8f8f2; }
+[data-md-color-scheme="dracula"] .highlight .mi { color: #bd93f9; }
+[data-md-color-scheme="dracula"] .highlight .c { color: #6272a4; }
+[data-md-color-scheme="dracula"] .highlight .cm { color: #6272a4; }
+[data-md-color-scheme="dracula"] .highlight .nf { color: #50fa7b; }

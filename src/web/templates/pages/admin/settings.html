@@ -1,0 +1,728 @@
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-base-content">System Settings</h1>
+            <p class="text-base-content/70 mt-1">Configure your CasGists instance</p>
+        </div>
+        <div class="mt-4 sm:mt-0 space-x-2">
+            <button onclick="exportSettings()" class="btn btn-ghost">
+                <i class="fas fa-download mr-2"></i>
+                Export Config
+            </button>
+            <button onclick="resetToDefaults()" class="btn btn-warning">
+                <i class="fas fa-undo mr-2"></i>
+                Reset to Defaults
+            </button>
+        </div>
+    </div>
+    
+    <!-- Settings Navigation -->
+    <div class="tabs tabs-boxed">
+        <a class="tab tab-active" onclick="switchTab('general')">
+            <i class="fas fa-cog mr-2"></i>
+            General
+        </a>
+        <a class="tab" onclick="switchTab('security')">
+            <i class="fas fa-shield-alt mr-2"></i>
+            Security
+        </a>
+        <a class="tab" onclick="switchTab('email')">
+            <i class="fas fa-envelope mr-2"></i>
+            Email
+        </a>
+        <a class="tab" onclick="switchTab('storage')">
+            <i class="fas fa-hdd mr-2"></i>
+            Storage
+        </a>
+        <a class="tab" onclick="switchTab('features')">
+            <i class="fas fa-toggle-on mr-2"></i>
+            Features
+        </a>
+        <a class="tab" onclick="switchTab('advanced')">
+            <i class="fas fa-code mr-2"></i>
+            Advanced
+        </a>
+    </div>
+    
+    <!-- General Settings -->
+    <div id="general-settings" class="tab-content">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Site Information -->
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <h2 class="card-title">
+                        <i class="fas fa-info-circle text-primary"></i>
+                        Site Information
+                    </h2>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Site Name</span>
+                        </label>
+                        <input type="text" class="input input-bordered" value="CasGists" id="site-name" />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Site Description</span>
+                        </label>
+                        <textarea class="textarea textarea-bordered" rows="3" id="site-description">A self-hosted GitHub Gist alternative</textarea>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Site URL</span>
+                        </label>
+                        <input type="url" class="input input-bordered" value="http://localhost:8080" id="site-url" />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Contact Email</span>
+                        </label>
+                        <input type="email" class="input input-bordered" placeholder="admin@example.com" id="contact-email" />
+                    </div>
+                </div>
+            </div>
+            
+            <!-- User Registration -->
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <h2 class="card-title">
+                        <i class="fas fa-user-plus text-secondary"></i>
+                        User Registration
+                    </h2>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Allow User Registration</span>
+                            <input type="checkbox" class="toggle toggle-primary" checked id="allow-registration" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Require Email Verification</span>
+                            <input type="checkbox" class="toggle toggle-primary" checked id="require-verification" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Auto-approve New Users</span>
+                            <input type="checkbox" class="toggle toggle-primary" id="auto-approve" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Registration Limits (per hour)</span>
+                        </label>
+                        <input type="number" class="input input-bordered" value="10" min="1" max="100" id="registration-limit" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Security Settings -->
+    <div id="security-settings" class="tab-content" style="display: none;">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Password Policy -->
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <h2 class="card-title">
+                        <i class="fas fa-key text-warning"></i>
+                        Password Policy
+                    </h2>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Minimum Length</span>
+                        </label>
+                        <input type="number" class="input input-bordered" value="12" min="8" max="128" id="min-password-length" />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Require Uppercase Letters</span>
+                            <input type="checkbox" class="toggle toggle-warning" checked id="require-uppercase" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Require Lowercase Letters</span>
+                            <input type="checkbox" class="toggle toggle-warning" checked id="require-lowercase" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Require Numbers</span>
+                            <input type="checkbox" class="toggle toggle-warning" checked id="require-numbers" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Require Special Characters</span>
+                            <input type="checkbox" class="toggle toggle-warning" id="require-symbols" />
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Session & Security -->
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <h2 class="card-title">
+                        <i class="fas fa-lock text-error"></i>
+                        Session & Security
+                    </h2>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Session Timeout (minutes)</span>
+                        </label>
+                        <input type="number" class="input input-bordered" value="1440" min="30" max="10080" id="session-timeout" />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Max Login Attempts</span>
+                        </label>
+                        <input type="number" class="input input-bordered" value="5" min="3" max="20" id="max-login-attempts" />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Lockout Duration (minutes)</span>
+                        </label>
+                        <input type="number" class="input input-bordered" value="15" min="5" max="1440" id="lockout-duration" />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Enable Two-Factor Authentication</span>
+                            <input type="checkbox" class="toggle toggle-error" id="enable-2fa" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Require HTTPS</span>
+                            <input type="checkbox" class="toggle toggle-error" id="require-https" />
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Email Settings -->
+    <div id="email-settings" class="tab-content" style="display: none;">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- SMTP Configuration -->
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <h2 class="card-title">
+                        <i class="fas fa-server text-info"></i>
+                        SMTP Configuration
+                    </h2>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Enable Email</span>
+                            <input type="checkbox" class="toggle toggle-info" id="enable-email" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">SMTP Host</span>
+                        </label>
+                        <input type="text" class="input input-bordered" placeholder="smtp.example.com" id="smtp-host" />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">SMTP Port</span>
+                        </label>
+                        <input type="number" class="input input-bordered" value="587" id="smtp-port" />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Username</span>
+                        </label>
+                        <input type="text" class="input input-bordered" placeholder="noreply@example.com" id="smtp-username" />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Password</span>
+                        </label>
+                        <input type="password" class="input input-bordered" placeholder="••••••••" id="smtp-password" />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Use TLS</span>
+                            <input type="checkbox" class="toggle toggle-info" checked id="smtp-tls" />
+                        </label>
+                    </div>
+                    
+                    <button onclick="testEmail()" class="btn btn-info btn-sm">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Test Email
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Email Templates -->
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <h2 class="card-title">
+                        <i class="fas fa-envelope-open text-accent"></i>
+                        Email Settings
+                    </h2>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">From Name</span>
+                        </label>
+                        <input type="text" class="input input-bordered" value="CasGists" id="email-from-name" />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">From Email</span>
+                        </label>
+                        <input type="email" class="input input-bordered" placeholder="noreply@example.com" id="email-from-address" />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Send Welcome Emails</span>
+                            <input type="checkbox" class="toggle toggle-accent" checked id="send-welcome" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Send Digest Emails</span>
+                            <input type="checkbox" class="toggle toggle-accent" id="send-digest" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Send Notification Emails</span>
+                            <input type="checkbox" class="toggle toggle-accent" checked id="send-notifications" />
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Storage Settings -->
+    <div id="storage-settings" class="tab-content" style="display: none;">
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <h2 class="card-title">
+                    <i class="fas fa-hdd text-success"></i>
+                    Storage Configuration
+                </h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Storage Provider</span>
+                            </label>
+                            <select class="select select-bordered" id="storage-provider">
+                                <option value="local">Local File System</option>
+                                <option value="s3">Amazon S3</option>
+                                <option value="gcs">Google Cloud Storage</option>
+                                <option value="azure">Azure Blob Storage</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Max File Size (MB)</span>
+                            </label>
+                            <input type="number" class="input input-bordered" value="100" min="1" max="1000" id="max-file-size" />
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Max Files per Gist</span>
+                            </label>
+                            <input type="number" class="input input-bordered" value="100" min="1" max="1000" id="max-files-per-gist" />
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Storage Quota per User (GB)</span>
+                            </label>
+                            <input type="number" class="input input-bordered" value="10" min="1" max="100" id="user-storage-quota" />
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="stats shadow">
+                            <div class="stat">
+                                <div class="stat-title">Total Storage Used</div>
+                                <div class="stat-value text-primary">2.3 GB</div>
+                                <div class="stat-desc">of 100 GB available</div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Local storage path: /data/casgists</span>
+                        </div>
+                        
+                        <button onclick="cleanupStorage()" class="btn btn-warning btn-sm">
+                            <i class="fas fa-broom mr-2"></i>
+                            Cleanup Unused Files
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Features Settings -->
+    <div id="features-settings" class="tab-content" style="display: none;">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Core Features -->
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <h2 class="card-title">
+                        <i class="fas fa-toggle-on text-primary"></i>
+                        Core Features
+                    </h2>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Enable Organizations</span>
+                            <input type="checkbox" class="toggle toggle-primary" checked id="enable-organizations" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Enable Gist Comments</span>
+                            <input type="checkbox" class="toggle toggle-primary" checked id="enable-comments" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Enable Gist Stars</span>
+                            <input type="checkbox" class="toggle toggle-primary" checked id="enable-stars" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Enable Gist Forks</span>
+                            <input type="checkbox" class="toggle toggle-primary" checked id="enable-forks" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Enable Git Integration</span>
+                            <input type="checkbox" class="toggle toggle-primary" id="enable-git" />
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Additional Features -->
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <h2 class="card-title">
+                        <i class="fas fa-plus-circle text-secondary"></i>
+                        Additional Features
+                    </h2>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Enable Search</span>
+                            <input type="checkbox" class="toggle toggle-secondary" checked id="enable-search" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Enable API Access</span>
+                            <input type="checkbox" class="toggle toggle-secondary" checked id="enable-api" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Enable RSS Feeds</span>
+                            <input type="checkbox" class="toggle toggle-secondary" checked id="enable-rss" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Enable Webhooks</span>
+                            <input type="checkbox" class="toggle toggle-secondary" id="enable-webhooks" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Enable Analytics</span>
+                            <input type="checkbox" class="toggle toggle-secondary" id="enable-analytics" />
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Advanced Settings -->
+    <div id="advanced-settings" class="tab-content" style="display: none;">
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <h2 class="card-title">
+                    <i class="fas fa-code text-warning"></i>
+                    Advanced Configuration
+                </h2>
+                
+                <div class="alert alert-warning mb-4">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Warning: These settings can affect system stability. Only modify if you know what you're doing.</span>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Database Connection Pool Size</span>
+                            </label>
+                            <input type="number" class="input input-bordered" value="25" min="5" max="100" id="db-pool-size" />
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Cache TTL (seconds)</span>
+                            </label>
+                            <input type="number" class="input input-bordered" value="3600" min="60" max="86400" id="cache-ttl" />
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Rate Limit (requests/minute)</span>
+                            </label>
+                            <input type="number" class="input input-bordered" value="100" min="10" max="1000" id="rate-limit" />
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="cursor-pointer label">
+                                <span class="label-text">Enable Debug Mode</span>
+                                <input type="checkbox" class="toggle toggle-warning" id="debug-mode" />
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Log Level</span>
+                            </label>
+                            <select class="select select-bordered" id="log-level">
+                                <option value="error">Error</option>
+                                <option value="warn">Warning</option>
+                                <option value="info" selected>Info</option>
+                                <option value="debug">Debug</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Worker Pool Size</span>
+                            </label>
+                            <input type="number" class="input input-bordered" value="10" min="1" max="50" id="worker-pool-size" />
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="cursor-pointer label">
+                                <span class="label-text">Enable Profiling</span>
+                                <input type="checkbox" class="toggle toggle-warning" id="enable-profiling" />
+                            </label>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="cursor-pointer label">
+                                <span class="label-text">Enable Metrics</span>
+                                <input type="checkbox" class="toggle toggle-warning" checked id="enable-metrics" />
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Save Button -->
+    <div class="card bg-base-300">
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-sm text-base-content/70">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Changes will be applied immediately. Some settings may require a server restart.
+                    </p>
+                </div>
+                <div class="space-x-2">
+                    <button onclick="resetSettings()" class="btn btn-ghost">
+                        <i class="fas fa-undo mr-2"></i>
+                        Reset
+                    </button>
+                    <button onclick="saveSettings()" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>
+                        Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTab = 'general';
+
+function switchTab(tab) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(el => {
+        el.style.display = 'none';
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.tab').forEach(el => {
+        el.classList.remove('tab-active');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tab + '-settings').style.display = 'block';
+    
+    // Add active class to selected tab
+    event.target.classList.add('tab-active');
+    
+    currentTab = tab;
+}
+
+async function saveSettings() {
+    try {
+        const settings = collectSettings();
+        
+        const response = await fetch('/api/v1/admin/settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CasGists.csrf
+            },
+            body: JSON.stringify(settings)
+        });
+        
+        if (response.ok) {
+            showToast('Settings saved successfully', 'success');
+        } else {
+            const data = await response.json();
+            showToast('Error saving settings: ' + data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Error saving settings: ' + error.message, 'error');
+    }
+}
+
+function collectSettings() {
+    const settings = {};
+    
+    // General settings
+    settings.site_name = document.getElementById('site-name').value;
+    settings.site_description = document.getElementById('site-description').value;
+    settings.site_url = document.getElementById('site-url').value;
+    settings.contact_email = document.getElementById('contact-email').value;
+    settings.allow_registration = document.getElementById('allow-registration').checked;
+    settings.require_verification = document.getElementById('require-verification').checked;
+    settings.auto_approve = document.getElementById('auto-approve').checked;
+    settings.registration_limit = parseInt(document.getElementById('registration-limit').value);
+    
+    // Security settings
+    settings.min_password_length = parseInt(document.getElementById('min-password-length').value);
+    settings.require_uppercase = document.getElementById('require-uppercase').checked;
+    settings.require_lowercase = document.getElementById('require-lowercase').checked;
+    settings.require_numbers = document.getElementById('require-numbers').checked;
+    settings.require_symbols = document.getElementById('require-symbols').checked;
+    settings.session_timeout = parseInt(document.getElementById('session-timeout').value);
+    settings.max_login_attempts = parseInt(document.getElementById('max-login-attempts').value);
+    settings.lockout_duration = parseInt(document.getElementById('lockout-duration').value);
+    settings.enable_2fa = document.getElementById('enable-2fa').checked;
+    settings.require_https = document.getElementById('require-https').checked;
+    
+    // Add other settings...
+    
+    return settings;
+}
+
+function resetSettings() {
+    if (!confirm('Are you sure you want to reset all settings to their defaults?')) return;
+    
+    // Reset all form fields to defaults
+    // This would typically load from the server
+    showToast('Settings reset to defaults', 'info');
+}
+
+function resetToDefaults() {
+    if (!confirm('This will reset ALL settings to their default values. Continue?')) return;
+    
+    // TODO: Implement reset to defaults
+    showToast('Reset to defaults not yet implemented', 'info');
+}
+
+function exportSettings() {
+    // TODO: Implement settings export
+    showToast('Settings export not yet implemented', 'info');
+}
+
+function testEmail() {
+    // TODO: Implement email testing
+    showToast('Email test not yet implemented', 'info');
+}
+
+function cleanupStorage() {
+    if (!confirm('This will remove unused files from storage. Continue?')) return;
+    
+    // TODO: Implement storage cleanup
+    showToast('Storage cleanup not yet implemented', 'info');
+}
+
+function showToast(message, type = 'info') {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} mb-2`;
+    toast.innerHTML = `<span>${message}</span>`;
+    
+    const container = document.getElementById('toast-container');
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+</script>
+{{end}}

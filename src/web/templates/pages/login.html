@@ -1,0 +1,123 @@
+{{define "login"}}
+{{template "base" .}}
+{{end}}
+
+{{define "content"}}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+                Sign in to your account
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                Or
+                <a href="/register" class="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
+                    create a new account
+                </a>
+            </p>
+        </div>
+        
+        <form class="mt-8 space-y-6" action="/api/v1/auth/login" method="POST" hx-post="/api/v1/auth/login" hx-ext="json-enc">
+            {{if .CSRFToken}}
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+            {{end}}
+            {{if .Error}}
+            <div class="rounded-md bg-red-50 dark:bg-red-900 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-circle text-red-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
+                            {{.Error}}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+            {{end}}
+            
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <label for="username" class="sr-only">Username or Email</label>
+                    <input id="username" name="username" type="text" autocomplete="username" required 
+                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                           placeholder="Username or Email">
+                </div>
+                <div>
+                    <label for="password" class="sr-only">Password</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required 
+                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                           placeholder="Password">
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <input id="remember-me" name="remember" type="checkbox" 
+                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                    <label for="remember-me" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+                        Remember me
+                    </label>
+                </div>
+
+                <div class="text-sm">
+                    <a href="/forgot-password" class="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
+                        Forgot your password?
+                    </a>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" 
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                        <i class="fas fa-lock text-indigo-500 group-hover:text-indigo-400"></i>
+                    </span>
+                    Sign in
+                </button>
+            </div>
+        </form>
+        
+        {{if .TwoFactorRequired}}
+        <div class="mt-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400">Two-Factor Authentication Required</span>
+                </div>
+            </div>
+            
+            <form class="mt-6" action="/api/v1/auth/2fa/verify" method="POST" hx-post="/api/v1/auth/2fa/verify" hx-ext="json-enc">
+                <div>
+                    <label for="totp_code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Authentication Code
+                    </label>
+                    <input type="text" name="totp_code" id="totp_code" required maxlength="6" pattern="[0-9]{6}"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                           placeholder="000000">
+                </div>
+                <div class="mt-4">
+                    <button type="submit" 
+                            class="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Verify
+                    </button>
+                </div>
+            </form>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+    htmx.on("htmx:afterRequest", function(evt) {
+        if (evt.detail.xhr.status === 200) {
+            // Redirect on successful login
+            window.location.href = "/";
+        }
+    });
+</script>
+{{end}}

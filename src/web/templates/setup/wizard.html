@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CasGists Setup Wizard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl w-full">
+            <!-- Logo and Title -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-gray-900 dark:text-white">CasGists</h1>
+                <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">Setup Wizard</p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mb-8" x-data="{ currentStep: 1, totalSteps: 9 }">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                 :style="`width: ${(currentStep / totalSteps) * 100}%`"></div>
+                        </div>
+                    </div>
+                    <span class="ml-4 text-sm text-gray-600 dark:text-gray-400">
+                        Step <span x-text="currentStep"></span> of <span x-text="totalSteps"></span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Setup Content -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+                <div id="setup-content">
+                    <!-- Step 1: Welcome -->
+                    <div id="step-welcome" class="step-content">
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                            Welcome to CasGists
+                        </h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-6">
+                            CasGists is a self-hosted gist service that provides a secure and private way to share code snippets.
+                            This setup wizard will guide you through the initial configuration.
+                        </p>
+                        
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                            <h3 class="font-semibold text-blue-800 dark:text-blue-300 mb-2">What we'll configure:</h3>
+                            <ul class="list-disc list-inside text-blue-700 dark:text-blue-400 space-y-1">
+                                <li>Administrator account</li>
+                                <li>Database connection</li>
+                                <li>Storage settings</li>
+                                <li>Server configuration</li>
+                                <li>Security settings</li>
+                                <li>Optional features</li>
+                            </ul>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button onclick="nextStep('admin')" 
+                                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                Get Started
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Admin Account -->
+                    <div id="step-admin" class="step-content hidden">
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                            Create Administrator Account
+                        </h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-6">
+                            Create the first administrator account. This account will have full access to all features.
+                        </p>
+
+                        <form id="admin-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Username
+                                </label>
+                                <input type="text" name="username" required
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                       placeholder="admin">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Email
+                                </label>
+                                <input type="email" name="email" required
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                       placeholder="admin@example.com">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Password
+                                </label>
+                                <input type="password" name="password" required minlength="8"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                       placeholder="••••••••">
+                                <p class="mt-1 text-sm text-gray-500">Minimum 8 characters</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Display Name
+                                </label>
+                                <input type="text" name="display_name"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                       placeholder="Administrator">
+                            </div>
+
+                            <div class="flex justify-between mt-6">
+                                <button type="button" onclick="previousStep('welcome')"
+                                        class="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                                    Previous
+                                </button>
+                                <button type="submit"
+                                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                    Create Account
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Step 3: Database Configuration -->
+                    <div id="step-database" class="step-content hidden">
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                            Database Configuration
+                        </h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-6">
+                            Configure your database connection. SQLite is recommended for most installations.
+                        </p>
+
+                        <form id="database-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Database Type
+                                </label>
+                                <select name="type" required onchange="toggleDatabaseFields(this.value)"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                                    <option value="sqlite">SQLite (Recommended)</option>
+                                    <option value="postgresql">PostgreSQL</option>
+                                    <option value="mysql">MySQL</option>
+                                </select>
+                            </div>
+
+                            <div id="database-connection" class="hidden space-y-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Host
+                                        </label>
+                                        <input type="text" name="host"
+                                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                               placeholder="localhost">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Port
+                                        </label>
+                                        <input type="number" name="port"
+                                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                               placeholder="5432">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Database Name
+                                    </label>
+                                    <input type="text" name="name"
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                           placeholder="casgists">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Username
+                                    </label>
+                                    <input type="text" name="username"
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                           placeholder="casgists">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Password
+                                    </label>
+                                    <input type="password" name="password"
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between mt-6">
+                                <button type="button" onclick="previousStep('admin')"
+                                        class="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                                    Previous
+                                </button>
+                                <button type="submit"
+                                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                    Continue
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Additional steps would follow similar pattern -->
+                    <!-- Storage, Server, Email, Security, Features, Review -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let currentStep = 'welcome';
+    const authToken = localStorage.getItem('access_token');
+
+    function showStep(step) {
+        // Hide all steps
+        document.querySelectorAll('.step-content').forEach(el => {
+            el.classList.add('hidden');
+        });
+        
+        // Show current step
+        const stepEl = document.getElementById(`step-${step}`);
+        if (stepEl) {
+            stepEl.classList.remove('hidden');
+        }
+        
+        currentStep = step;
+        
+        // Update progress bar
+        const stepNumber = getStepNumber(step);
+        Alpine.store('setup', { currentStep: stepNumber });
+    }
+
+    function nextStep(step) {
+        showStep(step);
+    }
+
+    function previousStep(step) {
+        showStep(step);
+    }
+
+    function getStepNumber(step) {
+        const steps = ['welcome', 'admin', 'database', 'storage', 'server', 'email', 'security', 'features', 'review'];
+        return steps.indexOf(step) + 1;
+    }
+
+    function toggleDatabaseFields(type) {
+        const connectionFields = document.getElementById('database-connection');
+        if (type === 'sqlite') {
+            connectionFields.classList.add('hidden');
+        } else {
+            connectionFields.classList.remove('hidden');
+            // Set default port based on database type
+            const portInput = document.querySelector('input[name="port"]');
+            if (type === 'postgresql') {
+                portInput.value = '5432';
+            } else if (type === 'mysql') {
+                portInput.value = '3306';
+            }
+        }
+    }
+
+    // Handle admin form submission
+    document.getElementById('admin-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
+        
+        try {
+            const response = await fetch('/api/v1/setup/admin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                // Store auth token
+                localStorage.setItem('access_token', result.access_token);
+                localStorage.setItem('refresh_token', result.refresh_token);
+                
+                // Move to next step
+                nextStep('database');
+            } else {
+                const error = await response.json();
+                alert('Error: ' + (error.message || 'Failed to create admin account'));
+            }
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
+    });
+
+    // Handle database form submission
+    document.getElementById('database-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
+        
+        try {
+            const response = await fetch('/api/v1/setup/step/database', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`,
+                },
+                body: JSON.stringify(data),
+            });
+            
+            if (response.ok) {
+                // Move to next step
+                nextStep('storage');
+            } else {
+                const error = await response.json();
+                alert('Error: ' + (error.message || 'Failed to configure database'));
+            }
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
+    });
+
+    // Check setup status on load
+    async function checkSetupStatus() {
+        try {
+            const response = await fetch('/api/v1/setup/status');
+            const status = await response.json();
+            
+            if (status.completed) {
+                window.location.href = '/';
+            } else {
+                showStep(status.step || 'welcome');
+            }
+        } catch (err) {
+            console.error('Failed to check setup status:', err);
+        }
+    }
+
+    // Initialize Alpine.js store
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('setup', {
+            currentStep: 1,
+        });
+    });
+
+    checkSetupStatus();
+    </script>
+</body>
+</html>

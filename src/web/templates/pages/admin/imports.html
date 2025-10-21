@@ -1,0 +1,878 @@
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-base-content">Platform Imports</h1>
+            <p class="text-base-content/70 mt-1">Import gists from GitHub, GitLab, Bitbucket, and other platforms</p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <a href="/admin/imports/history" class="btn btn-ghost">
+                <i class="fas fa-history mr-2"></i>
+                Import History
+            </a>
+        </div>
+    </div>
+
+    <!-- Platform Selection -->
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="card-title mb-4">
+                <i class="fas fa-download text-primary mr-2"></i>
+                Select Import Platform
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- GitHub -->
+                <div class="card bg-base-100 hover:bg-base-300 cursor-pointer transition-colors" onclick="selectPlatform('github')">
+                    <div class="card-body items-center text-center">
+                        <i class="fab fa-github text-4xl mb-2"></i>
+                        <h3 class="card-title text-lg">GitHub</h3>
+                        <p class="text-sm text-base-content/70">Import public and private gists</p>
+                        <div class="badge badge-primary">Popular</div>
+                    </div>
+                </div>
+
+                <!-- GitLab -->
+                <div class="card bg-base-100 hover:bg-base-300 cursor-pointer transition-colors" onclick="selectPlatform('gitlab')">
+                    <div class="card-body items-center text-center">
+                        <i class="fab fa-gitlab text-4xl mb-2 text-orange-500"></i>
+                        <h3 class="card-title text-lg">GitLab</h3>
+                        <p class="text-sm text-base-content/70">Import snippets and gists</p>
+                        <div class="badge badge-secondary">Supported</div>
+                    </div>
+                </div>
+
+                <!-- Bitbucket -->
+                <div class="card bg-base-100 hover:bg-base-300 cursor-pointer transition-colors" onclick="selectPlatform('bitbucket')">
+                    <div class="card-body items-center text-center">
+                        <i class="fab fa-bitbucket text-4xl mb-2 text-blue-500"></i>
+                        <h3 class="card-title text-lg">Bitbucket</h3>
+                        <p class="text-sm text-base-content/70">Import snippets</p>
+                        <div class="badge badge-accent">Supported</div>
+                    </div>
+                </div>
+
+                <!-- Custom URL -->
+                <div class="card bg-base-100 hover:bg-base-300 cursor-pointer transition-colors" onclick="selectPlatform('custom')">
+                    <div class="card-body items-center text-center">
+                        <i class="fas fa-link text-4xl mb-2"></i>
+                        <h3 class="card-title text-lg">Custom URL</h3>
+                        <p class="text-sm text-base-content/70">Import from any URL</p>
+                        <div class="badge badge-ghost">Advanced</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Configuration -->
+    <div id="import-config" class="card bg-base-200" style="display: none;">
+        <div class="card-body">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="card-title">
+                    <i class="fas fa-cog text-secondary mr-2"></i>
+                    Import Configuration
+                </h2>
+                <button onclick="resetPlatform()" class="btn btn-ghost btn-sm">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Platforms
+                </button>
+            </div>
+
+            <!-- Platform-specific configurations will be loaded here -->
+            <div id="platform-config">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Progress -->
+    <div id="import-progress" class="card bg-base-200" style="display: none;">
+        <div class="card-body">
+            <h2 class="card-title mb-4">
+                <i class="fas fa-download text-success mr-2"></i>
+                Import Progress
+            </h2>
+            
+            <div id="progress-content">
+                <!-- Progress content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Imports -->
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="card-title">
+                    <i class="fas fa-clock text-info mr-2"></i>
+                    Recent Imports
+                </h2>
+                <button onclick="refreshImports()" class="btn btn-ghost btn-sm">
+                    <i class="fas fa-refresh mr-2"></i>
+                    Refresh
+                </button>
+            </div>
+            
+            <div id="recent-imports" class="space-y-2">
+                <!-- Recent imports will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Platform Configuration Templates -->
+
+<!-- GitHub Configuration Template -->
+<template id="github-config-template">
+    <div class="space-y-6">
+        <div class="alert alert-info">
+            <i class="fab fa-github mr-2"></i>
+            <span>Import gists from your GitHub account. You'll need a Personal Access Token for private gists.</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Authentication -->
+            <div class="card bg-base-100">
+                <div class="card-body">
+                    <h3 class="card-title">Authentication</h3>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">GitHub Username</span>
+                            <span class="label-text-alt">Required</span>
+                        </label>
+                        <input type="text" class="input input-bordered" placeholder="your-username" id="github-username" required />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Personal Access Token</span>
+                            <span class="label-text-alt">Optional for public gists</span>
+                        </label>
+                        <input type="password" class="input input-bordered" placeholder="ghp_xxxxxxxxxxxx" id="github-token" />
+                        <label class="label">
+                            <span class="label-text-alt">
+                                <a href="https://github.com/settings/tokens" target="_blank" class="link">Create token</a> with 'gist' scope
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <button onclick="testGitHubConnection()" class="btn btn-outline btn-sm">
+                        <i class="fas fa-link mr-2"></i>
+                        Test Connection
+                    </button>
+                </div>
+            </div>
+
+            <!-- Import Options -->
+            <div class="card bg-base-100">
+                <div class="card-body">
+                    <h3 class="card-title">Import Options</h3>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Import Public Gists</span>
+                            <input type="checkbox" class="toggle toggle-primary" id="github-public" checked />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Import Private Gists</span>
+                            <input type="checkbox" class="toggle toggle-primary" id="github-private" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Preserve Original URLs</span>
+                            <input type="checkbox" class="toggle toggle-secondary" id="github-preserve-urls" checked />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Import Comments</span>
+                            <input type="checkbox" class="toggle toggle-secondary" id="github-comments" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Import Limit</span>
+                        </label>
+                        <input type="number" class="input input-bordered input-sm" placeholder="No limit" min="1" max="1000" id="github-limit" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-2">
+            <button onclick="startGitHubImport()" class="btn btn-primary">
+                <i class="fas fa-download mr-2"></i>
+                Start Import
+            </button>
+        </div>
+    </div>
+</template>
+
+<!-- GitLab Configuration Template -->
+<template id="gitlab-config-template">
+    <div class="space-y-6">
+        <div class="alert alert-info">
+            <i class="fab fa-gitlab mr-2"></i>
+            <span>Import snippets from GitLab.com or your self-hosted GitLab instance.</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Server & Authentication -->
+            <div class="card bg-base-100">
+                <div class="card-body">
+                    <h3 class="card-title">Server & Authentication</h3>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">GitLab Instance URL</span>
+                        </label>
+                        <input type="url" class="input input-bordered" value="https://gitlab.com" id="gitlab-url" />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Username</span>
+                            <span class="label-text-alt">Required</span>
+                        </label>
+                        <input type="text" class="input input-bordered" placeholder="your-username" id="gitlab-username" required />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Access Token</span>
+                            <span class="label-text-alt">Optional for public snippets</span>
+                        </label>
+                        <input type="password" class="input input-bordered" placeholder="glpat-xxxxxxxxxxxx" id="gitlab-token" />
+                        <label class="label">
+                            <span class="label-text-alt">
+                                Create token with 'read_api' scope
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <button onclick="testGitLabConnection()" class="btn btn-outline btn-sm">
+                        <i class="fas fa-link mr-2"></i>
+                        Test Connection
+                    </button>
+                </div>
+            </div>
+
+            <!-- Import Options -->
+            <div class="card bg-base-100">
+                <div class="card-body">
+                    <h3 class="card-title">Import Options</h3>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Import Public Snippets</span>
+                            <input type="checkbox" class="toggle toggle-primary" id="gitlab-public" checked />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Import Private Snippets</span>
+                            <input type="checkbox" class="toggle toggle-primary" id="gitlab-private" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Preserve Original URLs</span>
+                            <input type="checkbox" class="toggle toggle-secondary" id="gitlab-preserve-urls" checked />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Import Limit</span>
+                        </label>
+                        <input type="number" class="input input-bordered input-sm" placeholder="No limit" min="1" max="1000" id="gitlab-limit" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-2">
+            <button onclick="startGitLabImport()" class="btn btn-primary">
+                <i class="fas fa-download mr-2"></i>
+                Start Import
+            </button>
+        </div>
+    </div>
+</template>
+
+<!-- Bitbucket Configuration Template -->
+<template id="bitbucket-config-template">
+    <div class="space-y-6">
+        <div class="alert alert-info">
+            <i class="fab fa-bitbucket mr-2"></i>
+            <span>Import snippets from your Bitbucket account.</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Authentication -->
+            <div class="card bg-base-100">
+                <div class="card-body">
+                    <h3 class="card-title">Authentication</h3>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Bitbucket Username</span>
+                            <span class="label-text-alt">Required</span>
+                        </label>
+                        <input type="text" class="input input-bordered" placeholder="your-username" id="bitbucket-username" required />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">App Password</span>
+                            <span class="label-text-alt">Required for private snippets</span>
+                        </label>
+                        <input type="password" class="input input-bordered" placeholder="app-password" id="bitbucket-password" />
+                        <label class="label">
+                            <span class="label-text-alt">
+                                <a href="https://bitbucket.org/account/settings/app-passwords/" target="_blank" class="link">Create app password</a> with 'Snippets: Read' permission
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <button onclick="testBitbucketConnection()" class="btn btn-outline btn-sm">
+                        <i class="fas fa-link mr-2"></i>
+                        Test Connection
+                    </button>
+                </div>
+            </div>
+
+            <!-- Import Options -->
+            <div class="card bg-base-100">
+                <div class="card-body">
+                    <h3 class="card-title">Import Options</h3>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Import Public Snippets</span>
+                            <input type="checkbox" class="toggle toggle-primary" id="bitbucket-public" checked />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Import Private Snippets</span>
+                            <input type="checkbox" class="toggle toggle-primary" id="bitbucket-private" />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="cursor-pointer label">
+                            <span class="label-text">Preserve Original URLs</span>
+                            <input type="checkbox" class="toggle toggle-secondary" id="bitbucket-preserve-urls" checked />
+                        </label>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Import Limit</span>
+                        </label>
+                        <input type="number" class="input input-bordered input-sm" placeholder="No limit" min="1" max="1000" id="bitbucket-limit" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-2">
+            <button onclick="startBitbucketImport()" class="btn btn-primary">
+                <i class="fas fa-download mr-2"></i>
+                Start Import
+            </button>
+        </div>
+    </div>
+</template>
+
+<!-- Custom URL Configuration Template -->
+<template id="custom-config-template">
+    <div class="space-y-6">
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <span>Import gists from custom URLs. This feature requires knowledge of the target platform's API.</span>
+        </div>
+
+        <div class="card bg-base-100">
+            <div class="card-body">
+                <h3 class="card-title">Custom Import Configuration</h3>
+                
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Import Method</span>
+                    </label>
+                    <select class="select select-bordered" id="custom-method" onchange="toggleCustomMethod()">
+                        <option value="single">Single Gist URL</option>
+                        <option value="user">User Profile URL</option>
+                        <option value="api">Custom API Endpoint</option>
+                    </select>
+                </div>
+                
+                <div class="form-control" id="single-url-field">
+                    <label class="label">
+                        <span class="label-text">Gist URL</span>
+                    </label>
+                    <input type="url" class="input input-bordered" placeholder="https://example.com/gist/123" id="custom-single-url" />
+                </div>
+                
+                <div class="form-control" id="user-url-field" style="display: none;">
+                    <label class="label">
+                        <span class="label-text">User Profile URL</span>
+                    </label>
+                    <input type="url" class="input input-bordered" placeholder="https://example.com/user/username" id="custom-user-url" />
+                </div>
+                
+                <div id="api-fields" style="display: none;">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">API Endpoint</span>
+                        </label>
+                        <input type="url" class="input input-bordered" placeholder="https://api.example.com/gists" id="custom-api-url" />
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Authentication Header</span>
+                        </label>
+                        <input type="text" class="input input-bordered" placeholder="Authorization: Bearer token" id="custom-auth-header" />
+                    </div>
+                </div>
+                
+                <div class="form-control">
+                    <label class="cursor-pointer label">
+                        <span class="label-text">Parse as JSON</span>
+                        <input type="checkbox" class="toggle toggle-primary" id="custom-json" checked />
+                    </label>
+                </div>
+                
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Custom Headers (JSON)</span>
+                    </label>
+                    <textarea class="textarea textarea-bordered" placeholder='{"User-Agent": "CasGists-Importer/1.0"}' rows="3" id="custom-headers"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-2">
+            <button onclick="testCustomConnection()" class="btn btn-outline">
+                <i class="fas fa-link mr-2"></i>
+                Test Connection
+            </button>
+            <button onclick="startCustomImport()" class="btn btn-primary">
+                <i class="fas fa-download mr-2"></i>
+                Start Import
+            </button>
+        </div>
+    </div>
+</template>
+
+<script>
+let selectedPlatform = null;
+let activeImportId = null;
+
+// Load recent imports on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadRecentImports();
+});
+
+function selectPlatform(platform) {
+    selectedPlatform = platform;
+    
+    // Show import configuration
+    document.getElementById('import-config').style.display = 'block';
+    
+    // Load platform-specific configuration
+    loadPlatformConfig(platform);
+    
+    // Scroll to configuration
+    document.getElementById('import-config').scrollIntoView({ behavior: 'smooth' });
+}
+
+function loadPlatformConfig(platform) {
+    const container = document.getElementById('platform-config');
+    const template = document.getElementById(`${platform}-config-template`);
+    
+    if (template) {
+        container.innerHTML = template.innerHTML;
+    } else {
+        container.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Configuration for ${platform} is not yet available.</span>
+            </div>
+        `;
+    }
+}
+
+function resetPlatform() {
+    selectedPlatform = null;
+    document.getElementById('import-config').style.display = 'none';
+    document.getElementById('import-progress').style.display = 'none';
+}
+
+// GitHub Functions
+async function testGitHubConnection() {
+    const username = document.getElementById('github-username').value;
+    const token = document.getElementById('github-token').value;
+    
+    if (!username) {
+        showToast('Please enter a GitHub username', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/v1/admin/imports/github/test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CasGists.csrf
+            },
+            body: JSON.stringify({ username, token })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast(`Connected successfully! Found ${data.gist_count} gists.`, 'success');
+        } else {
+            showToast('Connection failed: ' + data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Connection error: ' + error.message, 'error');
+    }
+}
+
+async function startGitHubImport() {
+    const config = {
+        username: document.getElementById('github-username').value,
+        token: document.getElementById('github-token').value,
+        import_public: document.getElementById('github-public').checked,
+        import_private: document.getElementById('github-private').checked,
+        preserve_urls: document.getElementById('github-preserve-urls').checked,
+        import_comments: document.getElementById('github-comments').checked,
+        limit: document.getElementById('github-limit').value ? parseInt(document.getElementById('github-limit').value) : null
+    };
+    
+    if (!config.username) {
+        showToast('Please enter a GitHub username', 'warning');
+        return;
+    }
+    
+    if (config.import_private && !config.token) {
+        showToast('Access token is required for private gists', 'warning');
+        return;
+    }
+    
+    await startImport('github', config);
+}
+
+// GitLab Functions
+async function testGitLabConnection() {
+    const url = document.getElementById('gitlab-url').value;
+    const username = document.getElementById('gitlab-username').value;
+    const token = document.getElementById('gitlab-token').value;
+    
+    if (!username) {
+        showToast('Please enter a GitLab username', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/v1/admin/imports/gitlab/test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CasGists.csrf
+            },
+            body: JSON.stringify({ url, username, token })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast(`Connected successfully! Found ${data.snippet_count} snippets.`, 'success');
+        } else {
+            showToast('Connection failed: ' + data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Connection error: ' + error.message, 'error');
+    }
+}
+
+async function startGitLabImport() {
+    const config = {
+        url: document.getElementById('gitlab-url').value,
+        username: document.getElementById('gitlab-username').value,
+        token: document.getElementById('gitlab-token').value,
+        import_public: document.getElementById('gitlab-public').checked,
+        import_private: document.getElementById('gitlab-private').checked,
+        preserve_urls: document.getElementById('gitlab-preserve-urls').checked,
+        limit: document.getElementById('gitlab-limit').value ? parseInt(document.getElementById('gitlab-limit').value) : null
+    };
+    
+    if (!config.username) {
+        showToast('Please enter a GitLab username', 'warning');
+        return;
+    }
+    
+    await startImport('gitlab', config);
+}
+
+// Bitbucket Functions
+async function testBitbucketConnection() {
+    const username = document.getElementById('bitbucket-username').value;
+    const password = document.getElementById('bitbucket-password').value;
+    
+    if (!username) {
+        showToast('Please enter a Bitbucket username', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/v1/admin/imports/bitbucket/test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CasGists.csrf
+            },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast(`Connected successfully! Found ${data.snippet_count} snippets.`, 'success');
+        } else {
+            showToast('Connection failed: ' + data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Connection error: ' + error.message, 'error');
+    }
+}
+
+async function startBitbucketImport() {
+    const config = {
+        username: document.getElementById('bitbucket-username').value,
+        password: document.getElementById('bitbucket-password').value,
+        import_public: document.getElementById('bitbucket-public').checked,
+        import_private: document.getElementById('bitbucket-private').checked,
+        preserve_urls: document.getElementById('bitbucket-preserve-urls').checked,
+        limit: document.getElementById('bitbucket-limit').value ? parseInt(document.getElementById('bitbucket-limit').value) : null
+    };
+    
+    if (!config.username) {
+        showToast('Please enter a Bitbucket username', 'warning');
+        return;
+    }
+    
+    await startImport('bitbucket', config);
+}
+
+// Custom Functions
+function toggleCustomMethod() {
+    const method = document.getElementById('custom-method').value;
+    
+    document.getElementById('single-url-field').style.display = method === 'single' ? 'block' : 'none';
+    document.getElementById('user-url-field').style.display = method === 'user' ? 'block' : 'none';
+    document.getElementById('api-fields').style.display = method === 'api' ? 'block' : 'none';
+}
+
+async function testCustomConnection() {
+    // TODO: Implement custom connection testing
+    showToast('Custom connection testing not yet implemented', 'info');
+}
+
+async function startCustomImport() {
+    // TODO: Implement custom import
+    showToast('Custom import not yet implemented', 'info');
+}
+
+// Generic Import Functions
+async function startImport(platform, config) {
+    try {
+        const response = await fetch(`/api/v1/admin/imports/${platform}/start`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CasGists.csrf
+            },
+            body: JSON.stringify(config)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            activeImportId = data.import_id;
+            showImportProgress();
+            monitorImport();
+            showToast('Import started successfully', 'success');
+        } else {
+            showToast('Failed to start import: ' + data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Import error: ' + error.message, 'error');
+    }
+}
+
+function showImportProgress() {
+    document.getElementById('import-progress').style.display = 'block';
+    document.getElementById('import-progress').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function monitorImport() {
+    if (!activeImportId) return;
+    
+    const interval = setInterval(async () => {
+        try {
+            const response = await fetch(`/api/v1/admin/imports/status/${activeImportId}`);
+            const data = await response.json();
+            
+            if (response.ok) {
+                updateImportProgress(data);
+                
+                if (data.status === 'completed' || data.status === 'failed') {
+                    clearInterval(interval);
+                    loadRecentImports();
+                }
+            }
+        } catch (error) {
+            console.error('Error monitoring import:', error);
+        }
+    }, 2000);
+}
+
+function updateImportProgress(data) {
+    const container = document.getElementById('progress-content');
+    
+    const progressPercentage = Math.round((data.processed_items / data.total_items) * 100) || 0;
+    
+    container.innerHTML = `
+        <div class="alert ${data.status === 'failed' ? 'alert-error' : data.status === 'completed' ? 'alert-success' : 'alert-info'}">
+            <i class="fas fa-${data.status === 'failed' ? 'exclamation-circle' : data.status === 'completed' ? 'check-circle' : 'spinner fa-spin'}"></i>
+            <span>Status: ${data.status.charAt(0).toUpperCase() + data.status.slice(1)}</span>
+        </div>
+        
+        <div class="flex justify-between text-sm mb-2">
+            <span>Items Processed</span>
+            <span>${data.processed_items || 0} / ${data.total_items || 0}</span>
+        </div>
+        <progress class="progress progress-primary w-full mb-4" value="${progressPercentage}" max="100"></progress>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <p><strong>Platform:</strong> ${data.platform || 'Unknown'}</p>
+                <p><strong>Imported Gists:</strong> ${data.imported_gists || 0}</p>
+            </div>
+            <div>
+                <p><strong>Errors:</strong> ${data.error_count || 0}</p>
+                <p><strong>Elapsed Time:</strong> ${data.elapsed_time || '0s'}</p>
+            </div>
+        </div>
+        
+        ${data.current_operation ? `<p class="mt-2"><strong>Current:</strong> ${data.current_operation}</p>` : ''}
+        
+        ${data.errors && data.errors.length > 0 ? `
+            <div class="mt-4">
+                <h4 class="font-semibold">Recent Errors:</h4>
+                <div class="bg-base-200 p-2 rounded max-h-32 overflow-y-auto">
+                    ${data.errors.slice(-5).map(error => `<p class="text-sm text-error">${error}</p>`).join('')}
+                </div>
+            </div>
+        ` : ''}
+    `;
+}
+
+async function loadRecentImports() {
+    try {
+        const response = await fetch('/api/v1/admin/imports/recent');
+        const data = await response.json();
+        
+        if (response.ok) {
+            displayRecentImports(data.imports || []);
+        }
+    } catch (error) {
+        console.error('Error loading recent imports:', error);
+    }
+}
+
+function displayRecentImports(imports) {
+    const container = document.getElementById('recent-imports');
+    
+    if (imports.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 text-base-content/50">
+                <i class="fas fa-inbox text-4xl mb-2"></i>
+                <p>No recent imports</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = imports.map(imp => `
+        <div class="card bg-base-100">
+            <div class="card-body p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="avatar">
+                            <div class="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                                <i class="fab fa-${imp.platform} text-primary"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">${imp.platform.charAt(0).toUpperCase() + imp.platform.slice(1)} Import</h4>
+                            <p class="text-sm text-base-content/70">${imp.username || imp.source_url}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="badge ${imp.status === 'completed' ? 'badge-success' : imp.status === 'failed' ? 'badge-error' : 'badge-warning'}">${imp.status}</div>
+                        <p class="text-xs text-base-content/50 mt-1">${formatDate(imp.created_at)}</p>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center mt-2 text-sm">
+                    <span>${imp.imported_gists || 0} gists imported</span>
+                    ${imp.error_count > 0 ? `<span class="text-error">${imp.error_count} errors</span>` : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function refreshImports() {
+    loadRecentImports();
+    showToast('Recent imports refreshed', 'info');
+}
+
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} mb-2`;
+    toast.innerHTML = `<span>${message}</span>`;
+    
+    const container = document.getElementById('toast-container');
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+</script>
+{{end}}

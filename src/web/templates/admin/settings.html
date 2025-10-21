@@ -1,0 +1,650 @@
+{{define "admin_settings"}}
+{{template "base" .}}
+{{end}}
+
+{{define "head"}}
+<style>
+    .settings-section {
+        transition: all 0.3s ease;
+    }
+    .settings-section:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{{end}}
+
+{{define "content"}}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">System Settings</h1>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Configure CasGists system settings and features</p>
+    </div>
+
+    <!-- Settings Navigation -->
+    <div class="mb-8">
+        <nav class="flex space-x-4" aria-label="Settings">
+            <button onclick="showSection('general')" class="settings-tab px-3 py-2 text-sm font-medium rounded-md text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900">
+                General
+            </button>
+            <button onclick="showSection('security')" class="settings-tab px-3 py-2 text-sm font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                Security
+            </button>
+            <button onclick="showSection('email')" class="settings-tab px-3 py-2 text-sm font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                Email
+            </button>
+            <button onclick="showSection('storage')" class="settings-tab px-3 py-2 text-sm font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                Storage
+            </button>
+            <button onclick="showSection('features')" class="settings-tab px-3 py-2 text-sm font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                Features
+            </button>
+            <button onclick="showSection('advanced')" class="settings-tab px-3 py-2 text-sm font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                Advanced
+            </button>
+        </nav>
+    </div>
+
+    <!-- General Settings -->
+    <div id="general-section" class="settings-content">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">General Settings</h2>
+            <form id="generalForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Site Name</label>
+                    <input type="text" name="site_name" value="{{.Settings.SiteName}}" 
+                           class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Site URL</label>
+                    <input type="url" name="site_url" value="{{.Settings.SiteURL}}" 
+                           class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Site Description</label>
+                    <textarea name="site_description" rows="3"
+                              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">{{.Settings.SiteDescription}}</textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Default Language</label>
+                    <select name="default_language" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="en" {{if eq .Settings.DefaultLanguage "en"}}selected{{end}}>English</option>
+                        <option value="es" {{if eq .Settings.DefaultLanguage "es"}}selected{{end}}>Spanish</option>
+                        <option value="fr" {{if eq .Settings.DefaultLanguage "fr"}}selected{{end}}>French</option>
+                        <option value="de" {{if eq .Settings.DefaultLanguage "de"}}selected{{end}}>German</option>
+                        <option value="ja" {{if eq .Settings.DefaultLanguage "ja"}}selected{{end}}>Japanese</option>
+                        <option value="zh" {{if eq .Settings.DefaultLanguage "zh"}}selected{{end}}>Chinese</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time Zone</label>
+                    <select name="timezone" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="UTC">UTC</option>
+                        <option value="America/New_York">Eastern Time</option>
+                        <option value="America/Chicago">Central Time</option>
+                        <option value="America/Denver">Mountain Time</option>
+                        <option value="America/Los_Angeles">Pacific Time</option>
+                        <option value="Europe/London">London</option>
+                        <option value="Europe/Paris">Paris</option>
+                        <option value="Asia/Tokyo">Tokyo</option>
+                    </select>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-save mr-2"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Security Settings -->
+    <div id="security-section" class="settings-content hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Security Settings</h2>
+            <form id="securityForm" class="space-y-6">
+                <div class="space-y-4">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Authentication</h3>
+                    
+                    <div class="flex items-center">
+                        <input type="checkbox" name="enable_registration" id="enable_registration" {{if .Settings.EnableRegistration}}checked{{end}}
+                               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                        <label for="enable_registration" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                            Enable user registration
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" name="require_email_verification" id="require_email_verification" {{if .Settings.RequireEmailVerification}}checked{{end}}
+                               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                        <label for="require_email_verification" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                            Require email verification
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" name="enable_2fa" id="enable_2fa" {{if .Settings.Enable2FA}}checked{{end}}
+                               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                        <label for="enable_2fa" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                            Enable two-factor authentication
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" name="require_2fa_admin" id="require_2fa_admin" {{if .Settings.Require2FAAdmin}}checked{{end}}
+                               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                        <label for="require_2fa_admin" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                            Require 2FA for admin accounts
+                        </label>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Password Policy</h3>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Minimum Password Length</label>
+                        <input type="number" name="password_min_length" value="{{.Settings.PasswordMinLength}}" min="6" max="32"
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" name="password_require_uppercase" id="password_require_uppercase" {{if .Settings.PasswordRequireUppercase}}checked{{end}}
+                               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                        <label for="password_require_uppercase" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                            Require uppercase letters
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" name="password_require_numbers" id="password_require_numbers" {{if .Settings.PasswordRequireNumbers}}checked{{end}}
+                               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                        <label for="password_require_numbers" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                            Require numbers
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" name="password_require_special" id="password_require_special" {{if .Settings.PasswordRequireSpecial}}checked{{end}}
+                               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                        <label for="password_require_special" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                            Require special characters
+                        </label>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Rate Limiting</h3>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max Login Attempts</label>
+                        <input type="number" name="max_login_attempts" value="{{.Settings.MaxLoginAttempts}}" min="3" max="10"
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lockout Duration (minutes)</label>
+                        <input type="number" name="lockout_duration" value="{{.Settings.LockoutDuration}}" min="5" max="60"
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Rate Limit (requests/hour)</label>
+                        <input type="number" name="api_rate_limit" value="{{.Settings.APIRateLimit}}" min="60" max="10000"
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-save mr-2"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Email Settings -->
+    <div id="email-section" class="settings-content hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Email Settings</h2>
+            <form id="emailForm" class="space-y-6">
+                <div class="flex items-center mb-4">
+                    <input type="checkbox" name="email_enabled" id="email_enabled" {{if .Settings.EmailEnabled}}checked{{end}}
+                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                    <label for="email_enabled" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                        Enable email notifications
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SMTP Host</label>
+                        <input type="text" name="smtp_host" value="{{.Settings.SMTPHost}}"
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SMTP Port</label>
+                        <input type="number" name="smtp_port" value="{{.Settings.SMTPPort}}"
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SMTP Username</label>
+                        <input type="text" name="smtp_username" value="{{.Settings.SMTPUsername}}"
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SMTP Password</label>
+                        <input type="password" name="smtp_password" placeholder="••••••••"
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From Email</label>
+                        <input type="email" name="from_email" value="{{.Settings.FromEmail}}"
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From Name</label>
+                        <input type="text" name="from_name" value="{{.Settings.FromName}}"
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Encryption</label>
+                    <select name="smtp_encryption" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="none" {{if eq .Settings.SMTPEncryption "none"}}selected{{end}}>None</option>
+                        <option value="starttls" {{if eq .Settings.SMTPEncryption "starttls"}}selected{{end}}>STARTTLS</option>
+                        <option value="ssl" {{if eq .Settings.SMTPEncryption "ssl"}}selected{{end}}>SSL/TLS</option>
+                    </select>
+                </div>
+
+                <div class="pt-4 flex items-center space-x-4">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-save mr-2"></i> Save Changes
+                    </button>
+                    <button type="button" onclick="testEmail()" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <i class="fas fa-paper-plane mr-2"></i> Send Test Email
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Storage Settings -->
+    <div id="storage-section" class="settings-content hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Storage Settings</h2>
+            <form id="storageForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Storage Type</label>
+                    <select name="storage_type" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="local" {{if eq .Settings.StorageType "local"}}selected{{end}}>Local Filesystem</option>
+                        <option value="s3" {{if eq .Settings.StorageType "s3"}}selected{{end}}>Amazon S3</option>
+                        <option value="gcs" {{if eq .Settings.StorageType "gcs"}}selected{{end}}>Google Cloud Storage</option>
+                        <option value="azure" {{if eq .Settings.StorageType "azure"}}selected{{end}}>Azure Blob Storage</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Directory</label>
+                    <input type="text" name="data_directory" value="{{.Settings.DataDirectory}}"
+                           class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max File Size (MB)</label>
+                    <input type="number" name="max_file_size" value="{{.Settings.MaxFileSize}}" min="1" max="100"
+                           class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max Files Per Gist</label>
+                    <input type="number" name="max_files_per_gist" value="{{.Settings.MaxFilesPerGist}}" min="1" max="50"
+                           class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Default User Quota</label>
+                    <input type="text" name="default_user_quota" value="{{.Settings.DefaultUserQuota}}" placeholder="e.g., 1GB"
+                           class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Storage Usage</label>
+                    <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Total Used</span>
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">{{.StorageStats.Used}}</span>
+                        </div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Available</span>
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">{{.StorageStats.Available}}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Total Capacity</span>
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">{{.StorageStats.Total}}</span>
+                        </div>
+                        <div class="mt-3">
+                            <div class="bg-gray-300 dark:bg-gray-600 rounded-full h-2">
+                                <div class="bg-indigo-600 h-2 rounded-full" style="width: {{.StorageStats.UsedPercent}}%"></div>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{.StorageStats.UsedPercent}}% used</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-save mr-2"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Features Settings -->
+    <div id="features-section" class="settings-content hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Feature Toggles</h2>
+            <form id="featuresForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Core Features</h3>
+                        
+                        <div class="flex items-center">
+                            <input type="checkbox" name="enable_gist_comments" id="enable_gist_comments" {{if .Settings.EnableGistComments}}checked{{end}}
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                            <label for="enable_gist_comments" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                                Enable gist comments
+                            </label>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="checkbox" name="enable_gist_stars" id="enable_gist_stars" {{if .Settings.EnableGistStars}}checked{{end}}
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                            <label for="enable_gist_stars" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                                Enable gist stars
+                            </label>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="checkbox" name="enable_gist_forks" id="enable_gist_forks" {{if .Settings.EnableGistForks}}checked{{end}}
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                            <label for="enable_gist_forks" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                                Enable gist forking
+                            </label>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="checkbox" name="enable_user_follows" id="enable_user_follows" {{if .Settings.EnableUserFollows}}checked{{end}}
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                            <label for="enable_user_follows" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                                Enable user follows
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Advanced Features</h3>
+                        
+                        <div class="flex items-center">
+                            <input type="checkbox" name="enable_organizations" id="enable_organizations" {{if .Settings.EnableOrganizations}}checked{{end}}
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                            <label for="enable_organizations" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                                Enable organizations
+                            </label>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="checkbox" name="enable_api" id="enable_api" {{if .Settings.EnableAPI}}checked{{end}}
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                            <label for="enable_api" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                                Enable API access
+                            </label>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="checkbox" name="enable_webhooks" id="enable_webhooks" {{if .Settings.EnableWebhooks}}checked{{end}}
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                            <label for="enable_webhooks" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                                Enable webhooks
+                            </label>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="checkbox" name="enable_migration" id="enable_migration" {{if .Settings.EnableMigration}}checked{{end}}
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                            <label for="enable_migration" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                                Enable import/export
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-save mr-2"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Advanced Settings -->
+    <div id="advanced-section" class="settings-content hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Advanced Settings</h2>
+            <form id="advancedForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Database Connection Pool Size</label>
+                    <input type="number" name="db_pool_size" value="{{.Settings.DBPoolSize}}" min="10" max="200"
+                           class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Session Timeout (minutes)</label>
+                    <input type="number" name="session_timeout" value="{{.Settings.SessionTimeout}}" min="15" max="1440"
+                           class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cache TTL (seconds)</label>
+                    <input type="number" name="cache_ttl" value="{{.Settings.CacheTTL}}" min="60" max="86400"
+                           class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div class="flex items-center">
+                    <input type="checkbox" name="enable_debug" id="enable_debug" {{if .Settings.EnableDebug}}checked{{end}}
+                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded">
+                    <label for="enable_debug" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                        Enable debug mode (not recommended for production)
+                    </label>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-save mr-2"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-red-800 dark:text-red-200 mb-4">Danger Zone</h3>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-red-800 dark:text-red-200">Clear All Cache</p>
+                        <p class="text-sm text-red-600 dark:text-red-400">Remove all cached data. This may temporarily slow down the system.</p>
+                    </div>
+                    <button onclick="clearCache()" class="px-4 py-2 border border-red-600 dark:border-red-400 rounded-md text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40">
+                        Clear Cache
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-red-800 dark:text-red-200">Reset All Settings</p>
+                        <p class="text-sm text-red-600 dark:text-red-400">Reset all settings to default values. This cannot be undone.</p>
+                    </div>
+                    <button onclick="resetSettings()" class="px-4 py-2 border border-red-600 dark:border-red-400 rounded-md text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40">
+                        Reset Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+// Section navigation
+function showSection(section) {
+    // Hide all sections
+    document.querySelectorAll('.settings-content').forEach(el => {
+        el.classList.add('hidden');
+    });
+    
+    // Show selected section
+    document.getElementById(section + '-section').classList.remove('hidden');
+    
+    // Update tab styling
+    document.querySelectorAll('.settings-tab').forEach(tab => {
+        tab.classList.remove('text-indigo-700', 'dark:text-indigo-300', 'bg-indigo-100', 'dark:bg-indigo-900');
+        tab.classList.add('text-gray-500', 'dark:text-gray-400');
+    });
+    
+    event.target.classList.remove('text-gray-500', 'dark:text-gray-400');
+    event.target.classList.add('text-indigo-700', 'dark:text-indigo-300', 'bg-indigo-100', 'dark:bg-indigo-900');
+}
+
+// Form submissions
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
+        
+        // Convert checkboxes
+        form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            data[cb.name] = cb.checked;
+        });
+        
+        try {
+            const response = await fetch('/api/v1/admin/settings', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + getCookie('token')
+                },
+                body: JSON.stringify({
+                    section: form.id.replace('Form', ''),
+                    settings: data
+                })
+            });
+            
+            if (response.ok) {
+                showNotification('Settings saved successfully', 'success');
+            } else {
+                showNotification('Failed to save settings', 'error');
+            }
+        } catch (error) {
+            showNotification('Error saving settings', 'error');
+        }
+    });
+});
+
+// Test email
+async function testEmail() {
+    try {
+        const response = await fetch('/api/v1/admin/test-email', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + getCookie('token')
+            }
+        });
+        
+        if (response.ok) {
+            showNotification('Test email sent successfully', 'success');
+        } else {
+            showNotification('Failed to send test email', 'error');
+        }
+    } catch (error) {
+        showNotification('Error sending test email', 'error');
+    }
+}
+
+// Clear cache
+async function clearCache() {
+    if (confirm('Are you sure you want to clear all cache?')) {
+        try {
+            const response = await fetch('/api/v1/admin/cache/clear', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + getCookie('token')
+                }
+            });
+            
+            if (response.ok) {
+                showNotification('Cache cleared successfully', 'success');
+            }
+        } catch (error) {
+            showNotification('Error clearing cache', 'error');
+        }
+    }
+}
+
+// Reset settings
+async function resetSettings() {
+    if (confirm('Are you sure you want to reset all settings to default? This cannot be undone.')) {
+        try {
+            const response = await fetch('/api/v1/admin/settings/reset', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + getCookie('token')
+                }
+            });
+            
+            if (response.ok) {
+                showNotification('Settings reset successfully', 'success');
+                setTimeout(() => location.reload(), 1500);
+            }
+        } catch (error) {
+            showNotification('Error resetting settings', 'error');
+        }
+    }
+}
+
+// Utility functions
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `fixed bottom-4 right-4 px-4 py-2 rounded-md text-white z-50 ${
+        type === 'success' ? 'bg-green-600' : 'bg-red-600'
+    }`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.remove(), 3000);
+}
+
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+</script>
+{{end}}

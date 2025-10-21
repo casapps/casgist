@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/static/css/tailwind.css">
+    <link rel="manifest" href="/static/manifest.json">
+    <style>
+        .offline-badge {
+            background: linear-gradient(45deg, #f59e0b, #f97316);
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .cached-indicator {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <!-- Offline Status Banner -->
+    <div class="offline-badge text-white px-4 py-2 text-center">
+        <i class="fas fa-wifi-slash mr-2"></i>
+        Offline Mode - Showing cached gists
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">My Gists</h1>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">
+                        {{.Total}} cached gists available offline
+                    </p>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="cached-indicator rounded-lg px-3 py-1 text-sm font-medium text-blue-700 dark:text-blue-200">
+                        <i class="fas fa-cloud-download-alt mr-2"></i>
+                        Cached Content
+                    </div>
+                    
+                    <a href="/offline" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Back to Offline
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Offline Features Info -->
+        <div class="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-6">
+            <h3 class="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                <i class="fas fa-info-circle mr-2"></i>
+                Available Offline Features
+            </h3>
+            <div class="text-sm text-blue-800 dark:text-blue-200 grid md:grid-cols-2 gap-2">
+                <div><i class="fas fa-check text-green-500 mr-2"></i>View gist content</div>
+                <div><i class="fas fa-check text-green-500 mr-2"></i>Search cached gists</div>
+                <div><i class="fas fa-check text-green-500 mr-2"></i>Copy code snippets</div>
+                <div><i class="fas fa-clock text-yellow-500 mr-2"></i>Create new gists (will sync when online)</div>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-6">
+            <div class="relative">
+                <input type="text" 
+                       placeholder="Search your cached gists..." 
+                       class="w-full px-4 py-2 pl-10 pr-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                       onkeyup="filterGists(this.value)">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+        </div>
+
+        <!-- Gists List -->
+        {{if .Gists}}
+        <div class="space-y-4" id="gists-container">
+            {{range .Gists}}
+            <div class="gist-item bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                <a href="/gist/{{.ID}}" class="hover:text-indigo-600 dark:hover:text-indigo-400">
+                                    {{if .Title}}{{.Title}}{{else}}Untitled Gist{{end}}
+                                </a>
+                            </h3>
+                            
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                {{if eq .Visibility "public"}}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200{{end}}
+                                {{if eq .Visibility "unlisted"}}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200{{end}}
+                                {{if eq .Visibility "private"}}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{{end}}">
+                                <i class="fas fa-{{if eq .Visibility "public"}}globe{{else if eq .Visibility "unlisted"}}link{{else}}lock{{end}} mr-1"></i>
+                                {{.Visibility}}
+                            </span>
+
+                            <span class="cached-indicator rounded-full px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-200">
+                                <i class="fas fa-download mr-1"></i>
+                                Cached
+                            </span>
+                        </div>
+                        
+                        {{if .Description}}
+                        <p class="text-gray-600 dark:text-gray-400 mb-3">{{.Description}}</p>
+                        {{end}}
+                        
+                        <div class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                            <span>
+                                <i class="fas fa-file mr-1"></i>
+                                {{len .Files}} file{{if ne (len .Files) 1}}s{{end}}
+                            </span>
+                            {{if .Language}}
+                            <span>
+                                <i class="fas fa-code mr-1"></i>
+                                {{.Language}}
+                            </span>
+                            {{end}}
+                            <span>
+                                <i class="fas fa-clock mr-1"></i>
+                                Updated {{.UpdatedAt.Format "Jan 2, 2006"}}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2 ml-4">
+                        <button onclick="copyGistUrl('{{.ID}}')" 
+                                class="btn btn-sm btn-secondary" 
+                                title="Copy URL">
+                            <i class="fas fa-link"></i>
+                        </button>
+                        <a href="/gist/{{.ID}}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye mr-1"></i>
+                            View
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- File Preview -->
+                {{if .Files}}
+                <div class="mt-4 space-y-2">
+                    {{range .Files}}
+                    <div class="border border-gray-200 dark:border-gray-700 rounded">
+                        <div class="bg-gray-50 dark:bg-gray-700 px-3 py-2 border-b border-gray-200 dark:border-gray-600">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <i class="fas fa-file-code mr-1"></i>
+                                {{.Filename}}
+                            </span>
+                        </div>
+                        {{if .Content}}
+                        <div class="p-3 bg-gray-900 text-gray-100 text-sm overflow-x-auto">
+                            <pre><code>{{substr .Content 0 200}}{{if gt (len .Content) 200}}...{{end}}</code></pre>
+                        </div>
+                        {{end}}
+                    </div>
+                    {{end}}
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+        {{else}}
+        <div class="text-center py-12">
+            <i class="fas fa-folder-open text-6xl text-gray-400 mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Cached Gists</h3>
+            <p class="text-gray-600 dark:text-gray-400">
+                Visit gists while online to cache them for offline viewing.
+            </p>
+            <div class="mt-6">
+                <a href="/offline" class="btn btn-primary">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Offline Page
+                </a>
+            </div>
+        </div>
+        {{end}}
+
+        <!-- Pagination -->
+        {{if gt .Total .Limit}}
+        <div class="mt-8 flex justify-center">
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                {{if gt .Page 1}}
+                <a href="?page={{sub .Page 1}}" class="btn btn-secondary rounded-l-md">
+                    <i class="fas fa-chevron-left"></i>
+                    Previous
+                </a>
+                {{end}}
+                
+                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Page {{.Page}} of {{div .Total .Limit | add 1}}
+                </span>
+                
+                {{if lt (mul .Page .Limit) .Total}}
+                <a href="?page={{add .Page 1}}" class="btn btn-secondary rounded-r-md">
+                    Next
+                    <i class="fas fa-chevron-right ml-2"></i>
+                </a>
+                {{end}}
+            </nav>
+        </div>
+        {{end}}
+    </div>
+
+    <script>
+        // Filter gists based on search term
+        function filterGists(searchTerm) {
+            const gists = document.querySelectorAll('.gist-item');
+            const term = searchTerm.toLowerCase();
+            
+            gists.forEach(gist => {
+                const title = gist.querySelector('h3 a').textContent.toLowerCase();
+                const description = gist.querySelector('p')?.textContent.toLowerCase() || '';
+                const files = Array.from(gist.querySelectorAll('code')).map(code => code.textContent.toLowerCase()).join(' ');
+                
+                const matches = title.includes(term) || description.includes(term) || files.includes(term);
+                gist.style.display = matches ? 'block' : 'none';
+            });
+        }
+        
+        // Copy gist URL to clipboard
+        function copyGistUrl(gistId) {
+            const url = `${window.location.origin}/gist/${gistId}`;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('URL copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy URL', 'error');
+            });
+        }
+        
+        // Show toast notification
+        function showToast(message, type) {
+            // Simple toast implementation
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-md text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+        
+        // Check online status and show reconnection notice
+        function checkOnlineStatus() {
+            if (navigator.onLine) {
+                const banner = document.querySelector('.offline-badge');
+                if (banner) {
+                    banner.innerHTML = '<i class="fas fa-wifi mr-2"></i>Connection restored! Refreshing...';
+                    banner.className = 'bg-green-500 text-white px-4 py-2 text-center';
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                }
+            }
+        }
+        
+        // Listen for online/offline events
+        window.addEventListener('online', checkOnlineStatus);
+        
+        // Initial check
+        checkOnlineStatus();
+    </script>
+</body>
+</html>

@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+    <link rel="icon" type="image/png" href="/static/icons/icon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/static/icons/icon-16x16.png" sizes="16x16" />
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        
+        body {
+            margin: 0;
+            background: #1e1e2e;
+            color: #cdd6f4;
+        }
+        
+        /* Hide default Swagger UI topbar */
+        .swagger-ui .topbar {
+            display: none;
+        }
+        
+        /* Custom header */
+        .casgists-header {
+            background: linear-gradient(135deg, #1e1e2e 0%, #313244 100%);
+            padding: 1rem 2rem;
+            border-bottom: 2px solid #a6e3a1;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .casgists-header h1 {
+            margin: 0;
+            color: #a6e3a1;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .casgists-header p {
+            margin: 0.5rem 0 0 0;
+            color: #bac2de;
+            font-size: 1.1rem;
+        }
+        
+        .casgists-header .badges {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .badge-primary {
+            background-color: #a6e3a1;
+            color: #1e1e2e;
+        }
+        
+        .badge-secondary {
+            background-color: #fab387;
+            color: #1e1e2e;
+        }
+        
+        .badge-accent {
+            background-color: #f9e2af;
+            color: #1e1e2e;
+        }
+        
+        /* Swagger UI customizations */
+        .swagger-ui {
+            font-family: inherit;
+            background: #1e1e2e;
+        }
+        
+        .swagger-ui .info {
+            margin: 2rem 0;
+        }
+        
+        .swagger-ui .info .title {
+            color: #a6e3a1 !important;
+            font-size: 2rem;
+        }
+        
+        .swagger-ui .info .description {
+            color: #bac2de;
+        }
+        
+        .swagger-ui .scheme-container {
+            background: #313244;
+            border: 1px solid #45475a;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .swagger-ui .opblock-tag {
+            color: #cdd6f4;
+            background: #313244;
+            border: 1px solid #45475a;
+        }
+        
+        .swagger-ui .opblock {
+            background: #313244;
+            border: 1px solid #45475a;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .swagger-ui .opblock.opblock-get .opblock-summary-method {
+            background: #a6e3a1;
+            color: #1e1e2e;
+        }
+        
+        .swagger-ui .opblock.opblock-post .opblock-summary-method {
+            background: #74c0fc;
+            color: #1e1e2e;
+        }
+        
+        .swagger-ui .opblock.opblock-put .opblock-summary-method {
+            background: #fab387;
+            color: #1e1e2e;
+        }
+        
+        .swagger-ui .opblock.opblock-delete .opblock-summary-method {
+            background: #f38ba8;
+            color: #1e1e2e;
+        }
+        
+        .swagger-ui .opblock-summary-path {
+            color: #cdd6f4;
+        }
+        
+        .swagger-ui .opblock-summary-description {
+            color: #bac2de;
+        }
+        
+        .swagger-ui .parameter__name {
+            color: #a6e3a1;
+        }
+        
+        .swagger-ui .parameter__type {
+            color: #fab387;
+        }
+        
+        .swagger-ui .response-col_status {
+            color: #a6e3a1;
+        }
+        
+        .swagger-ui .response-col_description {
+            color: #bac2de;
+        }
+        
+        .swagger-ui .btn {
+            background: #a6e3a1;
+            color: #1e1e2e;
+            border: none;
+            border-radius: 0.375rem;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .swagger-ui .btn:hover {
+            background: #94e2d5;
+        }
+        
+        .swagger-ui .btn.execute {
+            background: #74c0fc;
+            color: #1e1e2e;
+        }
+        
+        .swagger-ui .btn.execute:hover {
+            background: #87ceeb;
+        }
+        
+        .swagger-ui textarea,
+        .swagger-ui input[type=text],
+        .swagger-ui input[type=password],
+        .swagger-ui input[type=search],
+        .swagger-ui input[type=email],
+        .swagger-ui input[type=url] {
+            background: #45475a;
+            border: 1px solid #585b70;
+            color: #cdd6f4;
+            border-radius: 0.375rem;
+        }
+        
+        .swagger-ui textarea:focus,
+        .swagger-ui input[type=text]:focus,
+        .swagger-ui input[type=password]:focus,
+        .swagger-ui input[type=search]:focus,
+        .swagger-ui input[type=email]:focus,
+        .swagger-ui input[type=url]:focus {
+            border-color: #a6e3a1;
+            box-shadow: 0 0 0 2px rgba(166, 227, 161, 0.2);
+        }
+        
+        .swagger-ui .highlight-code {
+            background: #313244;
+            border: 1px solid #45475a;
+            border-radius: 0.375rem;
+        }
+        
+        .swagger-ui .microlight {
+            color: #cdd6f4;
+        }
+        
+        .swagger-ui .model {
+            background: #313244;
+            border: 1px solid #45475a;
+            border-radius: 0.375rem;
+        }
+        
+        .swagger-ui .model-title {
+            color: #a6e3a1;
+        }
+        
+        .swagger-ui .prop-type {
+            color: #fab387;
+        }
+        
+        .swagger-ui .prop-name {
+            color: #74c0fc;
+        }
+        
+        /* Custom styles for dark theme */
+        .swagger-ui .wrapper {
+            background: #1e1e2e;
+            color: #cdd6f4;
+        }
+        
+        /* Navigation styles */
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .nav-link {
+            color: #74c0fc;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover {
+            color: #a6e3a1;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .casgists-header {
+                padding: 1rem;
+            }
+            
+            .casgists-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .badges {
+                flex-direction: column;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+            }
+        }
+        
+        /* Loading animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #45475a;
+            border-radius: 50%;
+            border-top-color: #a6e3a1;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #313244;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #585b70;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6c7086;
+        }
+    </style>
+</head>
+<body>
+    <!-- Custom Header -->
+    <div class="casgists-header">
+        <h1>🚀 CasGists API Documentation</h1>
+        <p>Comprehensive API reference for the self-hosted GitHub Gist alternative</p>
+        
+        <div class="badges">
+            <span class="badge badge-primary">OpenAPI 3.0</span>
+            <span class="badge badge-secondary">REST API</span>
+            <span class="badge badge-accent">Interactive</span>
+        </div>
+        
+        <div class="nav-links">
+            <a href="/api/docs" class="nav-link">Swagger UI</a>
+            <a href="/api/docs/redoc" class="nav-link">ReDoc</a>
+            <a href="/api/docs/openapi.json" class="nav-link">OpenAPI Spec</a>
+            <a href="/" class="nav-link">← Back to CasGists</a>
+        </div>
+    </div>
+
+    <!-- Swagger UI Container -->
+    <div id="swagger-ui"></div>
+
+    <!-- Loading indicator -->
+    <div id="loading" style="text-align: center; padding: 2rem;">
+        <div class="loading-spinner"></div>
+        <p style="margin-top: 1rem; color: #bac2de;">Loading API documentation...</p>
+    </div>
+
+    <!-- Swagger UI JavaScript -->
+    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {
+            // Hide loading indicator
+            document.getElementById('loading').style.display = 'none';
+            
+            // Initialize Swagger UI
+            const ui = SwaggerUIBundle({
+                url: '{{.SpecURL}}',
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                validatorUrl: null,
+                tryItOutEnabled: true,
+                supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+                docExpansion: 'list',
+                filter: true,
+                showExtensions: true,
+                showCommonExtensions: true,
+                defaultModelRendering: 'example',
+                defaultModelsExpandDepth: 2,
+                defaultModelExpandDepth: 3,
+                displayOperationId: false,
+                displayRequestDuration: true,
+                requestInterceptor: function(req) {
+                    // Add CSRF token if available
+                    if (window.CasGists && window.CasGists.csrf) {
+                        req.headers['X-CSRF-Token'] = window.CasGists.csrf;
+                    }
+                    return req;
+                },
+                responseInterceptor: function(res) {
+                    // Log responses for debugging
+                    console.log('API Response:', res.status, res.url);
+                    return res;
+                },
+                onComplete: function() {
+                    console.log('CasGists API documentation loaded successfully');
+                    
+                    // Add custom event listeners
+                    addCustomEventListeners();
+                },
+                onFailure: function(data) {
+                    console.error('Failed to load API documentation:', data);
+                    document.getElementById('loading').innerHTML = `
+                        <div style="color: #f38ba8; text-align: center; padding: 2rem;">
+                            <h3>Failed to Load API Documentation</h3>
+                            <p>Please check if the CasGists server is running and try again.</p>
+                            <button onclick="window.location.reload()" class="btn" style="margin-top: 1rem;">
+                                Retry
+                            </button>
+                        </div>
+                    `;
+                    document.getElementById('loading').style.display = 'block';
+                }
+            });
+            
+            window.ui = ui;
+        };
+        
+        function addCustomEventListeners() {
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Ctrl/Cmd + K to focus search
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    const searchInput = document.querySelector('.swagger-ui .filter input');
+                    if (searchInput) {
+                        searchInput.focus();
+                    }
+                }
+                
+                // Escape to clear search
+                if (e.key === 'Escape') {
+                    const searchInput = document.querySelector('.swagger-ui .filter input');
+                    if (searchInput && searchInput === document.activeElement) {
+                        searchInput.value = '';
+                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        searchInput.blur();
+                    }
+                }
+            });
+            
+            // Add copy functionality to code blocks
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.highlight-code, .microlight')) {
+                    const codeBlock = e.target.closest('.highlight-code, .microlight');
+                    const code = codeBlock.textContent || codeBlock.innerText;
+                    
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(code).then(function() {
+                            showToast('Code copied to clipboard!');
+                        }).catch(function(err) {
+                            console.error('Could not copy code: ', err);
+                        });
+                    }
+                }
+            });
+        }
+        
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #a6e3a1;
+                color: #1e1e2e;
+                padding: 12px 24px;
+                border-radius: 6px;
+                font-weight: 600;
+                z-index: 9999;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => {
+                toast.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.parentElement.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // Add service worker for offline documentation
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/static/sw.js').then(function(registration) {
+                    console.log('SW registered: ', registration);
+                }).catch(function(registrationError) {
+                    console.log('SW registration failed: ', registrationError);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

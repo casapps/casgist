@@ -1,0 +1,1043 @@
+{{define "content"}}
+<div class="container mx-auto px-4 py-6 max-w-6xl">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-base-content">Create New Gist</h1>
+            <p class="text-base-content/70 mt-1">Share your code snippets with the world</p>
+        </div>
+        <div class="mt-4 sm:mt-0 space-x-2">
+            <button onclick="loadTemplate()" class="btn btn-ghost">
+                <i class="fas fa-file-import mr-2"></i>
+                Load Template
+            </button>
+            <button onclick="togglePreview()" class="btn btn-ghost" id="preview-btn">
+                <i class="fas fa-eye mr-2"></i>
+                Preview
+            </button>
+        </div>
+    </div>
+
+    <form id="gist-form" class="space-y-6">
+        <!-- Gist Metadata -->
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <!-- Title -->
+                    <div class="form-control lg:col-span-2">
+                        <label class="label">
+                            <span class="label-text">Gist Title</span>
+                            <span class="label-text-alt">Optional but recommended</span>
+                        </label>
+                        <input type="text" class="input input-bordered" placeholder="My awesome code snippet" id="gist-title" />
+                    </div>
+
+                    <!-- Visibility -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Visibility</span>
+                        </label>
+                        <select class="select select-bordered" id="gist-visibility" onchange="updateVisibilityIcon()">
+                            <option value="public">
+                                <i class="fas fa-globe"></i>
+                                Public
+                            </option>
+                            <option value="unlisted">
+                                <i class="fas fa-link"></i>
+                                Unlisted
+                            </option>
+                            <option value="private" selected>
+                                <i class="fas fa-lock"></i>
+                                Private
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Description</span>
+                        <span class="label-text-alt">What does this gist do?</span>
+                    </label>
+                    <textarea class="textarea textarea-bordered" rows="3" placeholder="Brief description of your gist..." id="gist-description"></textarea>
+                </div>
+
+                <!-- Advanced Options -->
+                <div class="collapse collapse-arrow bg-base-100 mt-4">
+                    <input type="checkbox" />
+                    <div class="collapse-title text-lg font-medium">
+                        <i class="fas fa-cog mr-2"></i>
+                        Advanced Options
+                    </div>
+                    <div class="collapse-content">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                            <!-- Organization -->
+                            {{if .Organizations}}
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Organization</span>
+                                </label>
+                                <select class="select select-bordered" id="gist-organization">
+                                    <option value="">Personal Gist</option>
+                                    {{range .Organizations}}
+                                    <option value="{{.ID}}">{{.Name}}</option>
+                                    {{end}}
+                                </select>
+                            </div>
+                            {{end}}
+
+                            <!-- Tags -->
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Tags</span>
+                                    <span class="label-text-alt">Comma-separated</span>
+                                </label>
+                                <input type="text" class="input input-bordered" placeholder="javascript, api, example" id="gist-tags" />
+                            </div>
+
+                            <!-- Expiration -->
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Expiration</span>
+                                </label>
+                                <select class="select select-bordered" id="gist-expiration">
+                                    <option value="">Never</option>
+                                    <option value="1h">1 Hour</option>
+                                    <option value="1d">1 Day</option>
+                                    <option value="1w">1 Week</option>
+                                    <option value="1m">1 Month</option>
+                                    <option value="1y">1 Year</option>
+                                </select>
+                            </div>
+
+                            <!-- Template -->
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Save as Template</span>
+                                </label>
+                                <label class="cursor-pointer label">
+                                    <span class="label-text">Make this gist reusable</span>
+                                    <input type="checkbox" class="toggle toggle-primary" id="save-as-template" />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Editor -->
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="card-title">
+                        <i class="fas fa-file-code text-primary mr-2"></i>
+                        Files
+                    </h2>
+                    <button type="button" onclick="addFile()" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus mr-2"></i>
+                        Add File
+                    </button>
+                </div>
+
+                <div id="files-container">
+                    <!-- Initial file -->
+                    <div class="file-editor mb-4" data-file-index="0">
+                        <div class="file-header bg-base-100 p-4 rounded-t-lg border border-base-300">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-4 flex-1">
+                                    <div class="form-control flex-1">
+                                        <input type="text" class="input input-bordered input-sm" placeholder="filename.ext" onchange="updateLanguage(this, 0)" id="file-name-0" />
+                                    </div>
+                                    <div class="form-control">
+                                        <select class="select select-bordered select-sm" onchange="updateFileLanguage(0)" id="file-language-0">
+                                            <option value="">Auto-detect</option>
+                                            <option value="javascript">JavaScript</option>
+                                            <option value="python">Python</option>
+                                            <option value="java">Java</option>
+                                            <option value="csharp">C#</option>
+                                            <option value="cpp">C++</option>
+                                            <option value="go">Go</option>
+                                            <option value="rust">Rust</option>
+                                            <option value="php">PHP</option>
+                                            <option value="ruby">Ruby</option>
+                                            <option value="typescript">TypeScript</option>
+                                            <option value="html">HTML</option>
+                                            <option value="css">CSS</option>
+                                            <option value="sql">SQL</option>
+                                            <option value="json">JSON</option>
+                                            <option value="yaml">YAML</option>
+                                            <option value="markdown">Markdown</option>
+                                            <option value="shell">Shell</option>
+                                            <option value="docker">Dockerfile</option>
+                                            <option value="text">Plain Text</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button type="button" onclick="formatCode(0)" class="btn btn-ghost btn-xs" title="Format Code">
+                                        <i class="fas fa-magic"></i>
+                                    </button>
+                                    <button type="button" onclick="toggleWrap(0)" class="btn btn-ghost btn-xs" title="Toggle Word Wrap">
+                                        <i class="fas fa-align-left"></i>
+                                    </button>
+                                    <button type="button" onclick="removeFile(0)" class="btn btn-ghost btn-xs text-error" title="Remove File">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="file-content">
+                            <div class="relative">
+                                <textarea class="textarea textarea-bordered w-full min-h-96 font-mono text-sm leading-relaxed" placeholder="Enter your code here..." id="file-content-0" oninput="updateLineNumbers(0)"></textarea>
+                                <div class="line-numbers absolute left-0 top-0 p-4 text-xs text-base-content/50 pointer-events-none font-mono leading-relaxed" id="line-numbers-0">1</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Upload -->
+                <div class="border-2 border-dashed border-base-300 rounded-lg p-8 text-center" ondrop="handleFileDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-base-content/50 mb-2"></i>
+                    <p class="text-base-content/70 mb-2">Drag and drop files here, or</p>
+                    <input type="file" multiple class="file-input file-input-bordered file-input-sm" onchange="handleFileSelect(event)" id="file-upload" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Mode -->
+        <div id="preview-container" class="card bg-base-200" style="display: none;">
+            <div class="card-body">
+                <h2 class="card-title mb-4">
+                    <i class="fas fa-eye text-secondary mr-2"></i>
+                    Preview
+                </h2>
+                <div id="preview-content">
+                    <!-- Preview will be generated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+            <div class="space-x-2">
+                <button type="button" onclick="saveDraft()" class="btn btn-ghost">
+                    <i class="fas fa-save mr-2"></i>
+                    Save Draft
+                </button>
+                <button type="button" onclick="loadDraft()" class="btn btn-ghost">
+                    <i class="fas fa-folder-open mr-2"></i>
+                    Load Draft
+                </button>
+            </div>
+            
+            <div class="space-x-2">
+                <button type="button" onclick="clearForm()" class="btn btn-ghost">
+                    <i class="fas fa-trash mr-2"></i>
+                    Clear
+                </button>
+                <button type="submit" class="btn btn-primary" id="create-btn">
+                    <i class="fas fa-plus mr-2"></i>
+                    Create Gist
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Template Modal -->
+<dialog id="template-modal" class="modal">
+    <div class="modal-box max-w-2xl">
+        <h3 class="font-bold text-lg mb-4">Load Template</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Built-in Templates -->
+            <div>
+                <h4 class="font-semibold mb-2">Built-in Templates</h4>
+                <div class="space-y-2" id="builtin-templates">
+                    <div class="card bg-base-100 hover:bg-base-200 cursor-pointer p-3" onclick="loadBuiltinTemplate('react-component')">
+                        <div class="flex items-center space-x-2">
+                            <i class="fab fa-react text-blue-500"></i>
+                            <div>
+                                <h5 class="font-medium">React Component</h5>
+                                <p class="text-xs text-base-content/70">Functional component with hooks</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card bg-base-100 hover:bg-base-200 cursor-pointer p-3" onclick="loadBuiltinTemplate('api-endpoint')">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-server text-green-500"></i>
+                            <div>
+                                <h5 class="font-medium">API Endpoint</h5>
+                                <p class="text-xs text-base-content/70">Express.js route handler</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card bg-base-100 hover:bg-base-200 cursor-pointer p-3" onclick="loadBuiltinTemplate('python-script')">
+                        <div class="flex items-center space-x-2">
+                            <i class="fab fa-python text-yellow-500"></i>
+                            <div>
+                                <h5 class="font-medium">Python Script</h5>
+                                <p class="text-xs text-base-content/70">Basic Python script template</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card bg-base-100 hover:bg-base-200 cursor-pointer p-3" onclick="loadBuiltinTemplate('dockerfile')">
+                        <div class="flex items-center space-x-2">
+                            <i class="fab fa-docker text-blue-600"></i>
+                            <div>
+                                <h5 class="font-medium">Dockerfile</h5>
+                                <p class="text-xs text-base-content/70">Multi-stage Docker build</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- User Templates -->
+            <div>
+                <h4 class="font-semibold mb-2">Your Templates</h4>
+                <div class="space-y-2" id="user-templates">
+                    <div class="text-center py-8 text-base-content/50">
+                        <i class="fas fa-bookmark text-2xl mb-2"></i>
+                        <p class="text-sm">No saved templates</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-action">
+            <button class="btn" onclick="closeTemplateModal()">Close</button>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+
+<style>
+.file-content {
+    position: relative;
+}
+
+.line-numbers {
+    top: 0.75rem !important;
+    user-select: none;
+    white-space: pre-line;
+    z-index: 1;
+}
+
+.textarea {
+    padding-left: 3rem !important;
+    background: transparent;
+    resize: vertical;
+}
+
+.file-editor {
+    border: 1px solid hsl(var(--bc) / 0.2);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.drag-over {
+    border-color: hsl(var(--p));
+    background-color: hsl(var(--p) / 0.1);
+}
+</style>
+
+<script>
+let fileCount = 1;
+let isPreviewMode = false;
+
+// Initialize line numbers for the first file
+document.addEventListener('DOMContentLoaded', function() {
+    updateLineNumbers(0);
+    
+    // Auto-save draft every 30 seconds
+    setInterval(autoSaveDraft, 30000);
+    
+    // Load existing draft if available
+    loadDraft(true);
+});
+
+function addFile() {
+    const container = document.getElementById('files-container');
+    const fileIndex = fileCount++;
+    
+    const fileEditor = document.createElement('div');
+    fileEditor.className = 'file-editor mb-4';
+    fileEditor.setAttribute('data-file-index', fileIndex);
+    
+    fileEditor.innerHTML = `
+        <div class="file-header bg-base-100 p-4 rounded-t-lg border border-base-300">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4 flex-1">
+                    <div class="form-control flex-1">
+                        <input type="text" class="input input-bordered input-sm" placeholder="filename.ext" onchange="updateLanguage(this, ${fileIndex})" id="file-name-${fileIndex}" />
+                    </div>
+                    <div class="form-control">
+                        <select class="select select-bordered select-sm" onchange="updateFileLanguage(${fileIndex})" id="file-language-${fileIndex}">
+                            <option value="">Auto-detect</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="python">Python</option>
+                            <option value="java">Java</option>
+                            <option value="csharp">C#</option>
+                            <option value="cpp">C++</option>
+                            <option value="go">Go</option>
+                            <option value="rust">Rust</option>
+                            <option value="php">PHP</option>
+                            <option value="ruby">Ruby</option>
+                            <option value="typescript">TypeScript</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                            <option value="sql">SQL</option>
+                            <option value="json">JSON</option>
+                            <option value="yaml">YAML</option>
+                            <option value="markdown">Markdown</option>
+                            <option value="shell">Shell</option>
+                            <option value="docker">Dockerfile</option>
+                            <option value="text">Plain Text</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="formatCode(${fileIndex})" class="btn btn-ghost btn-xs" title="Format Code">
+                        <i class="fas fa-magic"></i>
+                    </button>
+                    <button type="button" onclick="toggleWrap(${fileIndex})" class="btn btn-ghost btn-xs" title="Toggle Word Wrap">
+                        <i class="fas fa-align-left"></i>
+                    </button>
+                    <button type="button" onclick="removeFile(${fileIndex})" class="btn btn-ghost btn-xs text-error" title="Remove File">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="file-content">
+            <div class="relative">
+                <textarea class="textarea textarea-bordered w-full min-h-96 font-mono text-sm leading-relaxed" placeholder="Enter your code here..." id="file-content-${fileIndex}" oninput="updateLineNumbers(${fileIndex})"></textarea>
+                <div class="line-numbers absolute left-0 top-0 p-4 text-xs text-base-content/50 pointer-events-none font-mono leading-relaxed" id="line-numbers-${fileIndex}">1</div>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(fileEditor);
+    updateLineNumbers(fileIndex);
+    
+    // Focus on the filename input
+    document.getElementById(`file-name-${fileIndex}`).focus();
+}
+
+function removeFile(fileIndex) {
+    if (document.querySelectorAll('.file-editor').length <= 1) {
+        showToast('You must have at least one file', 'warning');
+        return;
+    }
+    
+    const fileEditor = document.querySelector(`[data-file-index="${fileIndex}"]`);
+    if (fileEditor) {
+        fileEditor.remove();
+    }
+}
+
+function updateLanguage(input, fileIndex) {
+    const filename = input.value;
+    const extension = filename.split('.').pop().toLowerCase();
+    const languageSelect = document.getElementById(`file-language-${fileIndex}`);
+    
+    const languageMap = {
+        'js': 'javascript',
+        'ts': 'typescript',
+        'py': 'python',
+        'java': 'java',
+        'cs': 'csharp',
+        'cpp': 'cpp',
+        'cc': 'cpp',
+        'cxx': 'cpp',
+        'go': 'go',
+        'rs': 'rust',
+        'php': 'php',
+        'rb': 'ruby',
+        'html': 'html',
+        'htm': 'html',
+        'css': 'css',
+        'scss': 'css',
+        'sass': 'css',
+        'sql': 'sql',
+        'json': 'json',
+        'yml': 'yaml',
+        'yaml': 'yaml',
+        'md': 'markdown',
+        'sh': 'shell',
+        'bash': 'shell',
+        'dockerfile': 'docker'
+    };
+    
+    if (languageMap[extension]) {
+        languageSelect.value = languageMap[extension];
+    }
+}
+
+function updateFileLanguage(fileIndex) {
+    // Language change handling can be implemented here
+    // For syntax highlighting, etc.
+}
+
+function updateLineNumbers(fileIndex) {
+    const textarea = document.getElementById(`file-content-${fileIndex}`);
+    const lineNumbers = document.getElementById(`line-numbers-${fileIndex}`);
+    
+    if (!textarea || !lineNumbers) return;
+    
+    const lines = textarea.value.split('\n');
+    const lineNumbersText = lines.map((_, index) => index + 1).join('\n');
+    lineNumbers.textContent = lineNumbersText;
+}
+
+function formatCode(fileIndex) {
+    // Basic code formatting - can be enhanced with actual formatters
+    const textarea = document.getElementById(`file-content-${fileIndex}`);
+    const language = document.getElementById(`file-language-${fileIndex}`).value;
+    
+    if (language === 'json') {
+        try {
+            const parsed = JSON.parse(textarea.value);
+            textarea.value = JSON.stringify(parsed, null, 2);
+            updateLineNumbers(fileIndex);
+            showToast('JSON formatted successfully', 'success');
+        } catch (e) {
+            showToast('Invalid JSON format', 'error');
+        }
+    } else {
+        showToast('Code formatting not yet implemented for this language', 'info');
+    }
+}
+
+function toggleWrap(fileIndex) {
+    const textarea = document.getElementById(`file-content-${fileIndex}`);
+    textarea.style.whiteSpace = textarea.style.whiteSpace === 'pre' ? 'pre-wrap' : 'pre';
+}
+
+function updateVisibilityIcon() {
+    // Update visibility indication if needed
+}
+
+function togglePreview() {
+    isPreviewMode = !isPreviewMode;
+    const previewContainer = document.getElementById('preview-container');
+    const previewBtn = document.getElementById('preview-btn');
+    const filesContainer = document.getElementById('files-container').parentElement;
+    
+    if (isPreviewMode) {
+        generatePreview();
+        previewContainer.style.display = 'block';
+        filesContainer.style.display = 'none';
+        previewBtn.innerHTML = '<i class="fas fa-edit mr-2"></i>Edit';
+    } else {
+        previewContainer.style.display = 'none';
+        filesContainer.style.display = 'block';
+        previewBtn.innerHTML = '<i class="fas fa-eye mr-2"></i>Preview';
+    }
+}
+
+function generatePreview() {
+    const previewContent = document.getElementById('preview-content');
+    const title = document.getElementById('gist-title').value || 'Untitled Gist';
+    const description = document.getElementById('gist-description').value;
+    const visibility = document.getElementById('gist-visibility').value;
+    
+    let filesHtml = '';
+    const fileEditors = document.querySelectorAll('.file-editor');
+    
+    fileEditors.forEach((editor, index) => {
+        const fileIndex = editor.getAttribute('data-file-index');
+        const filename = document.getElementById(`file-name-${fileIndex}`).value || `file${index + 1}`;
+        const content = document.getElementById(`file-content-${fileIndex}`).value;
+        const language = document.getElementById(`file-language-${fileIndex}`).value;
+        
+        filesHtml += `
+            <div class="file-preview mb-4">
+                <div class="bg-base-100 p-3 rounded-t-lg border-b">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono text-sm">${filename}</span>
+                        <span class="badge badge-ghost">${language || 'text'}</span>
+                    </div>
+                </div>
+                <div class="bg-base-100 p-4 rounded-b-lg border border-base-300 border-t-0">
+                    <pre class="text-sm font-mono whitespace-pre-wrap">${content || '(empty file)'}</pre>
+                </div>
+            </div>
+        `;
+    });
+    
+    const visibilityIcon = {
+        'public': 'fas fa-globe text-success',
+        'unlisted': 'fas fa-link text-warning',
+        'private': 'fas fa-lock text-error'
+    }[visibility];
+    
+    previewContent.innerHTML = `
+        <div class="gist-preview">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-xl font-bold">${title}</h3>
+                    ${description ? `<p class="text-base-content/70 mt-1">${description}</p>` : ''}
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="${visibilityIcon}"></i>
+                    <span class="text-sm capitalize">${visibility}</span>
+                </div>
+            </div>
+            ${filesHtml}
+        </div>
+    `;
+}
+
+// File upload handlers
+function handleDragOver(event) {
+    event.preventDefault();
+    event.currentTarget.classList.add('drag-over');
+}
+
+function handleDragLeave(event) {
+    event.currentTarget.classList.remove('drag-over');
+}
+
+function handleFileDrop(event) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('drag-over');
+    
+    const files = Array.from(event.dataTransfer.files);
+    processFiles(files);
+}
+
+function handleFileSelect(event) {
+    const files = Array.from(event.target.files);
+    processFiles(files);
+}
+
+function processFiles(files) {
+    files.forEach((file, index) => {
+        if (index > 0) addFile(); // Add new file editors for additional files
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const fileIndex = index === 0 ? 0 : fileCount - 1;
+            document.getElementById(`file-name-${fileIndex}`).value = file.name;
+            document.getElementById(`file-content-${fileIndex}`).value = e.target.result;
+            updateLanguage(document.getElementById(`file-name-${fileIndex}`), fileIndex);
+            updateLineNumbers(fileIndex);
+        };
+        reader.readAsText(file);
+    });
+}
+
+// Template functions
+function loadTemplate() {
+    document.getElementById('template-modal').showModal();
+}
+
+function closeTemplateModal() {
+    document.getElementById('template-modal').close();
+}
+
+function loadBuiltinTemplate(templateName) {
+    const templates = {
+        'react-component': {
+            title: 'React Functional Component',
+            description: 'A basic React functional component with hooks',
+            files: [{
+                name: 'Component.jsx',
+                language: 'javascript',
+                content: `import React, { useState, useEffect } from 'react';
+
+const Component = ({ prop1, prop2 }) => {
+  const [state, setState] = useState(null);
+
+  useEffect(() => {
+    // Effect logic here
+  }, []);
+
+  return (
+    <div>
+      <h1>Hello World</h1>
+      <p>This is a React component</p>
+    </div>
+  );
+};
+
+export default Component;`
+            }]
+        },
+        'api-endpoint': {
+            title: 'Express.js API Endpoint',
+            description: 'RESTful API endpoint with error handling',
+            files: [{
+                name: 'api.js',
+                language: 'javascript',
+                content: `const express = require('express');
+const router = express.Router();
+
+// GET endpoint
+router.get('/items', async (req, res) => {
+  try {
+    // Your logic here
+    const items = await getItems();
+    res.json({ success: true, data: items });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST endpoint
+router.post('/items', async (req, res) => {
+  try {
+    const newItem = await createItem(req.body);
+    res.status(201).json({ success: true, data: newItem });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+module.exports = router;`
+            }]
+        },
+        'python-script': {
+            title: 'Python Script Template',
+            description: 'Basic Python script with argument parsing',
+            files: [{
+                name: 'script.py',
+                language: 'python',
+                content: `#!/usr/bin/env python3
+"""
+Description of what this script does
+"""
+
+import argparse
+import sys
+
+def main():
+    parser = argparse.ArgumentParser(description='Script description')
+    parser.add_argument('--input', '-i', help='Input file')
+    parser.add_argument('--output', '-o', help='Output file')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
+    
+    args = parser.parse_args()
+    
+    if args.verbose:
+        print("Running in verbose mode")
+    
+    # Your script logic here
+    print("Hello, World!")
+
+if __name__ == '__main__':
+    main()`
+            }]
+        },
+        'dockerfile': {
+            title: 'Multi-stage Dockerfile',
+            description: 'Docker build configuration with multi-stage builds',
+            files: [{
+                name: 'Dockerfile',
+                language: 'docker',
+                content: `# Build stage
+FROM node:16-alpine AS builder
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Runtime stage
+FROM node:16-alpine AS runtime
+
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY . .
+
+USER nextjs
+
+EXPOSE 3000
+ENV PORT 3000
+
+CMD ["npm", "start"]`
+            }]
+        }
+    };
+    
+    const template = templates[templateName];
+    if (template) {
+        document.getElementById('gist-title').value = template.title;
+        document.getElementById('gist-description').value = template.description;
+        
+        // Clear existing files
+        document.getElementById('files-container').innerHTML = '';
+        fileCount = 0;
+        
+        // Add template files
+        template.files.forEach((file, index) => {
+            if (index === 0) {
+                // Use first file editor
+                document.getElementById('file-name-0').value = file.name;
+                document.getElementById('file-language-0').value = file.language;
+                document.getElementById('file-content-0').value = file.content;
+                updateLineNumbers(0);
+            } else {
+                addFile();
+                const fileIndex = fileCount - 1;
+                document.getElementById(`file-name-${fileIndex}`).value = file.name;
+                document.getElementById(`file-language-${fileIndex}`).value = file.language;
+                document.getElementById(`file-content-${fileIndex}`).value = file.content;
+                updateLineNumbers(fileIndex);
+            }
+        });
+        
+        closeTemplateModal();
+        showToast(`Template "${template.title}" loaded`, 'success');
+    }
+}
+
+// Draft functions
+function saveDraft() {
+    const draft = collectGistData();
+    localStorage.setItem('gist-draft', JSON.stringify(draft));
+    localStorage.setItem('gist-draft-timestamp', Date.now().toString());
+    showToast('Draft saved locally', 'success');
+}
+
+function autoSaveDraft() {
+    // Only auto-save if there's content
+    const hasContent = document.querySelectorAll('.file-editor').length > 0 && 
+                      Array.from(document.querySelectorAll('[id^="file-content-"]')).some(textarea => textarea.value.trim());
+    
+    if (hasContent) {
+        const draft = collectGistData();
+        localStorage.setItem('gist-auto-draft', JSON.stringify(draft));
+        localStorage.setItem('gist-auto-draft-timestamp', Date.now().toString());
+    }
+}
+
+function loadDraft(silent = false) {
+    const draft = localStorage.getItem('gist-draft') || localStorage.getItem('gist-auto-draft');
+    if (draft) {
+        try {
+            const data = JSON.parse(draft);
+            populateForm(data);
+            if (!silent) {
+                showToast('Draft loaded', 'success');
+            }
+        } catch (e) {
+            if (!silent) {
+                showToast('Failed to load draft', 'error');
+            }
+        }
+    }
+}
+
+function collectGistData() {
+    const files = [];
+    const fileEditors = document.querySelectorAll('.file-editor');
+    
+    fileEditors.forEach(editor => {
+        const fileIndex = editor.getAttribute('data-file-index');
+        const filename = document.getElementById(`file-name-${fileIndex}`).value;
+        const content = document.getElementById(`file-content-${fileIndex}`).value;
+        const language = document.getElementById(`file-language-${fileIndex}`).value;
+        
+        if (filename || content) {
+            files.push({ filename, content, language });
+        }
+    });
+    
+    return {
+        title: document.getElementById('gist-title').value,
+        description: document.getElementById('gist-description').value,
+        visibility: document.getElementById('gist-visibility').value,
+        organization_id: document.getElementById('gist-organization')?.value || null,
+        tags: document.getElementById('gist-tags').value,
+        expiration: document.getElementById('gist-expiration').value,
+        save_as_template: document.getElementById('save-as-template').checked,
+        files: files
+    };
+}
+
+function populateForm(data) {
+    document.getElementById('gist-title').value = data.title || '';
+    document.getElementById('gist-description').value = data.description || '';
+    document.getElementById('gist-visibility').value = data.visibility || 'private';
+    if (document.getElementById('gist-organization')) {
+        document.getElementById('gist-organization').value = data.organization_id || '';
+    }
+    document.getElementById('gist-tags').value = data.tags || '';
+    document.getElementById('gist-expiration').value = data.expiration || '';
+    document.getElementById('save-as-template').checked = data.save_as_template || false;
+    
+    // Clear existing files
+    document.getElementById('files-container').innerHTML = '';
+    fileCount = 0;
+    
+    // Add files from draft
+    if (data.files && data.files.length > 0) {
+        data.files.forEach((file, index) => {
+            if (index === 0) {
+                // Use first file editor
+                document.getElementById('files-container').innerHTML = `
+                    <div class="file-editor mb-4" data-file-index="0">
+                        <div class="file-header bg-base-100 p-4 rounded-t-lg border border-base-300">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-4 flex-1">
+                                    <div class="form-control flex-1">
+                                        <input type="text" class="input input-bordered input-sm" placeholder="filename.ext" onchange="updateLanguage(this, 0)" id="file-name-0" value="${file.filename || ''}" />
+                                    </div>
+                                    <div class="form-control">
+                                        <select class="select select-bordered select-sm" onchange="updateFileLanguage(0)" id="file-language-0">
+                                            <option value="">Auto-detect</option>
+                                            <option value="javascript">JavaScript</option>
+                                            <option value="python">Python</option>
+                                            <option value="java">Java</option>
+                                            <option value="csharp">C#</option>
+                                            <option value="cpp">C++</option>
+                                            <option value="go">Go</option>
+                                            <option value="rust">Rust</option>
+                                            <option value="php">PHP</option>
+                                            <option value="ruby">Ruby</option>
+                                            <option value="typescript">TypeScript</option>
+                                            <option value="html">HTML</option>
+                                            <option value="css">CSS</option>
+                                            <option value="sql">SQL</option>
+                                            <option value="json">JSON</option>
+                                            <option value="yaml">YAML</option>
+                                            <option value="markdown">Markdown</option>
+                                            <option value="shell">Shell</option>
+                                            <option value="docker">Dockerfile</option>
+                                            <option value="text">Plain Text</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button type="button" onclick="formatCode(0)" class="btn btn-ghost btn-xs" title="Format Code">
+                                        <i class="fas fa-magic"></i>
+                                    </button>
+                                    <button type="button" onclick="toggleWrap(0)" class="btn btn-ghost btn-xs" title="Toggle Word Wrap">
+                                        <i class="fas fa-align-left"></i>
+                                    </button>
+                                    <button type="button" onclick="removeFile(0)" class="btn btn-ghost btn-xs text-error" title="Remove File">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="file-content">
+                            <div class="relative">
+                                <textarea class="textarea textarea-bordered w-full min-h-96 font-mono text-sm leading-relaxed" placeholder="Enter your code here..." id="file-content-0" oninput="updateLineNumbers(0)">${file.content || ''}</textarea>
+                                <div class="line-numbers absolute left-0 top-0 p-4 text-xs text-base-content/50 pointer-events-none font-mono leading-relaxed" id="line-numbers-0">1</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                fileCount = 1;
+                document.getElementById('file-language-0').value = file.language || '';
+                updateLineNumbers(0);
+            } else {
+                addFile();
+                const fileIndex = fileCount - 1;
+                document.getElementById(`file-name-${fileIndex}`).value = file.filename || '';
+                document.getElementById(`file-language-${fileIndex}`).value = file.language || '';
+                document.getElementById(`file-content-${fileIndex}`).value = file.content || '';
+                updateLineNumbers(fileIndex);
+            }
+        });
+    }
+}
+
+function clearForm() {
+    if (!confirm('Are you sure you want to clear the form? Any unsaved changes will be lost.')) {
+        return;
+    }
+    
+    document.getElementById('gist-form').reset();
+    document.getElementById('files-container').innerHTML = '';
+    fileCount = 0;
+    addFile();
+    localStorage.removeItem('gist-draft');
+    localStorage.removeItem('gist-auto-draft');
+    showToast('Form cleared', 'info');
+}
+
+// Form submission
+document.getElementById('gist-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const gistData = collectGistData();
+    
+    if (gistData.files.length === 0) {
+        showToast('Please add at least one file', 'warning');
+        return;
+    }
+    
+    if (gistData.files.some(file => !file.filename)) {
+        showToast('Please provide filenames for all files', 'warning');
+        return;
+    }
+    
+    const createBtn = document.getElementById('create-btn');
+    const originalText = createBtn.innerHTML;
+    createBtn.innerHTML = '<span class="loading loading-spinner loading-sm mr-2"></span>Creating...';
+    createBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/v1/gists', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CasGists.csrf
+            },
+            body: JSON.stringify(gistData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Clear drafts on successful creation
+            localStorage.removeItem('gist-draft');
+            localStorage.removeItem('gist-auto-draft');
+            
+            showToast('Gist created successfully!', 'success');
+            
+            // Redirect to the new gist
+            setTimeout(() => {
+                window.location.href = `/gist/${data.gist.id}`;
+            }, 1000);
+        } else {
+            showToast('Failed to create gist: ' + data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Error creating gist: ' + error.message, 'error');
+    } finally {
+        createBtn.innerHTML = originalText;
+        createBtn.disabled = false;
+    }
+});
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} mb-2`;
+    toast.innerHTML = `<span>${message}</span>`;
+    
+    const container = document.getElementById('toast-container');
+    if (container) {
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
+}
+</script>
+{{end}}

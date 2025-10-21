@@ -1,0 +1,50 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+CLAUDE.md
+
+# Build artifacts
+binaries/
+build/
+dist/
+release/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test files
+tests/
+*_test.go
+coverage.txt
+coverage.html
+
+# Runtime data
+data/
+ssl/
+*.db
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# CI/CD
+.github/
+.claude/
+
+# Config
+.readthedocs.yml
+mkdocs.yml
+
+# Misc
+.DS_Store
+Thumbs.db

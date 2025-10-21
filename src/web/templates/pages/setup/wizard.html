@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}} - CasGists</title>
+    <link href="/static/css/tailwind.css" rel="stylesheet">
+    <style>
+        /* Custom animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        .slide-in-right { animation: slideInRight 0.5s ease-out; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="min-h-screen flex">
+        <!-- Sidebar - Steps Navigation -->
+        <div class="w-80 bg-gray-800 border-r border-gray-700 flex flex-col">
+            <!-- Header -->
+            <div class="p-6 border-b border-gray-700">
+                <h1 class="text-xl font-bold text-white mb-2">CasGists Setup</h1>
+                <p class="text-gray-400 text-sm">Complete server configuration</p>
+            </div>
+
+            <!-- Steps List -->
+            <div class="flex-1 p-4">
+                <nav class="space-y-2">
+                    {{range .steps}}
+                    <div class="step-item {{if .IsActive}}step-active{{else if .IsComplete}}step-complete{{else}}step-pending{{end}}" 
+                         data-step="{{.StepNumber}}">
+                        <div class="flex items-center p-3 rounded-lg cursor-pointer transition-colors">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-3
+                                        {{if .IsComplete}}bg-green-600{{else if .IsActive}}bg-blue-600{{else}}bg-gray-600{{end}}">
+                                {{if .IsComplete}}
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                {{else}}
+                                    <span class="text-sm font-medium text-white">{{.StepNumber}}</span>
+                                {{end}}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium {{if .IsActive}}text-white{{else if .IsComplete}}text-green-200{{else}}text-gray-400{{end}}">
+                                    {{.Title}}
+                                </p>
+                                <p class="text-xs {{if .IsActive}}text-gray-300{{else}}text-gray-500{{end}} truncate">
+                                    {{.Description}}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {{end}}
+                </nav>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-gray-700">
+                <p class="text-xs text-gray-500 text-center">
+                    CasGists v1.0.0
+                </p>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col">
+            <!-- Progress Bar -->
+            <div class="bg-gray-800 border-b border-gray-700 p-4">
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-400">Progress</span>
+                        <span class="text-sm text-gray-400"><span id="progress-current">1</span> of {{len .steps}}</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-2">
+                        <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 12.5%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step Content -->
+            <div class="flex-1 overflow-y-auto">
+                <div class="max-w-4xl mx-auto p-8">
+                    <!-- Dynamic step content will be loaded here -->
+                    <div id="step-content" class="fade-in">
+                        <!-- Step 1: Welcome (Default) -->
+                        <div id="step-1-content" class="step-content">
+                            <div class="text-center mb-8">
+                                <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                                    </svg>
+                                </div>
+                                <h2 class="text-3xl font-bold text-white mb-2">Welcome to CasGists Setup!</h2>
+                                <p class="text-xl text-gray-300">Let's configure your self-hosted gist server</p>
+                            </div>
+
+                            <div class="bg-gray-800 rounded-lg p-6 mb-8">
+                                <h3 class="text-lg font-semibold text-white mb-4">🔍 Checking system requirements...</h3>
+                                <div id="system-checks" class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-300">Operating System</span>
+                                        <span class="text-green-400">✅ Linux (Ubuntu 22.04)</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-300">Available Memory</span>
+                                        <span class="text-green-400">✅ 2.1 GB</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-300">Available Disk</span>
+                                        <span class="text-green-400">✅ 45.2 GB</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-300">Network Connectivity</span>
+                                        <span class="text-green-400">✅ OK</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-300">Permissions</span>
+                                        <span class="text-green-400">✅ Running as administrator</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between">
+                                <button class="px-6 py-2 text-gray-400 bg-gray-700 rounded-md cursor-not-allowed" disabled>
+                                    ← Previous
+                                </button>
+                                <button id="continue-btn" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                                    Continue to Database Setup →
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Additional step content will be loaded dynamically -->
+                        <div id="other-step-content" class="step-content hidden">
+                            <!-- Dynamically loaded content -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 text-center">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+            <p class="text-white">Loading...</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentStep = 1;
+            const totalSteps = {{len .steps}};
+
+            // Initialize
+            updateProgressBar();
+            
+            // Handle step navigation
+            document.querySelectorAll('.step-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const stepNumber = parseInt(this.dataset.step);
+                    if (stepNumber <= currentStep) {
+                        navigateToStep(stepNumber);
+                    }
+                });
+            });
+
+            // Handle continue button
+            document.getElementById('continue-btn')?.addEventListener('click', function() {
+                if (currentStep < totalSteps) {
+                    processCurrentStep();
+                }
+            });
+
+            function navigateToStep(stepNumber) {
+                if (stepNumber === currentStep) return;
+
+                showLoading(true);
+                
+                // Load step content
+                fetch(`/setup/wizard/step/${stepNumber}`)
+                    .then(response => response.text())
+                    .then(html => {
+                        // Update step content
+                        document.getElementById('step-content').innerHTML = html;
+                        
+                        // Update current step
+                        currentStep = stepNumber;
+                        updateStepNavigation();
+                        updateProgressBar();
+                        
+                        showLoading(false);
+                    })
+                    .catch(error => {
+                        console.error('Error loading step:', error);
+                        showLoading(false);
+                    });
+            }
+
+            function processCurrentStep() {
+                showLoading(true);
+
+                // Collect form data if present
+                const form = document.querySelector('#step-content form');
+                const formData = form ? new FormData(form) : new FormData();
+                const data = Object.fromEntries(formData.entries());
+
+                // Submit step data
+                fetch(`/setup/wizard/step/${currentStep}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        if (result.next_step) {
+                            navigateToStep(result.next_step);
+                        } else if (result.redirect) {
+                            window.location.href = result.redirect;
+                        }
+                    } else {
+                        showError(result.message || 'An error occurred');
+                        showLoading(false);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error processing step:', error);
+                    showError('Failed to process step. Please try again.');
+                    showLoading(false);
+                });
+            }
+
+            function updateStepNavigation() {
+                // Update step items
+                document.querySelectorAll('.step-item').forEach(item => {
+                    const stepNumber = parseInt(item.dataset.step);
+                    item.classList.remove('step-active', 'step-complete', 'step-pending');
+                    
+                    if (stepNumber < currentStep) {
+                        item.classList.add('step-complete');
+                    } else if (stepNumber === currentStep) {
+                        item.classList.add('step-active');
+                    } else {
+                        item.classList.add('step-pending');
+                    }
+                });
+            }
+
+            function updateProgressBar() {
+                const progressPercent = (currentStep / totalSteps) * 100;
+                document.getElementById('progress-bar').style.width = progressPercent + '%';
+                document.getElementById('progress-current').textContent = currentStep;
+            }
+
+            function showLoading(show) {
+                const overlay = document.getElementById('loading-overlay');
+                if (show) {
+                    overlay.classList.remove('hidden');
+                } else {
+                    overlay.classList.add('hidden');
+                }
+            }
+
+            function showError(message) {
+                // Create or update error message
+                let errorDiv = document.getElementById('error-message');
+                if (!errorDiv) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.id = 'error-message';
+                    errorDiv.className = 'bg-red-900 border border-red-600 rounded-md p-4 mb-4';
+                    document.getElementById('step-content').prepend(errorDiv);
+                }
+                
+                errorDiv.innerHTML = `<p class="text-red-200">${message}</p>`;
+                errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            // System check simulation (for demo)
+            setTimeout(() => {
+                const checks = document.querySelectorAll('#system-checks > div');
+                checks.forEach((check, index) => {
+                    setTimeout(() => {
+                        const status = check.querySelector('.text-green-400, .text-red-400');
+                        if (status && status.textContent.includes('...')) {
+                            status.textContent = status.textContent.replace('...', '');
+                            status.classList.add('text-green-400');
+                        }
+                    }, index * 500);
+                });
+            }, 1000);
+        });
+    </script>
+
+    <style>
+        .step-active {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+        }
+        .step-complete {
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+        .step-pending:hover {
+            background-color: rgba(75, 85, 99, 0.1);
+        }
+    </style>
+</body>
+</html>

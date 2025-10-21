@@ -1,0 +1,321 @@
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-base-content">Admin Dashboard</h1>
+            <p class="text-base-content/70 mt-1">Overview of your CasGists instance</p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <div class="flex items-center space-x-2 text-sm text-base-content/70">
+                <i class="fas fa-clock"></i>
+                <span>Last updated: {{.LastUpdated}}</span>
+                <button onclick="refreshDashboard()" class="btn btn-ghost btn-xs">
+                    <i class="fas fa-refresh"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Status Alert -->
+    {{if .SystemAlerts}}
+    <div class="space-y-2">
+        {{range .SystemAlerts}}
+        <div class="alert alert-{{.Type}}">
+            <i class="fas fa-{{.Icon}}"></i>
+            <span>{{.Message}}</span>
+            {{if .Action}}
+            <a href="{{.ActionURL}}" class="btn btn-sm">{{.Action}}</a>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+    {{end}}
+    
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Users -->
+        <div class="stat bg-base-200 rounded-box">
+            <div class="stat-figure text-primary">
+                <i class="fas fa-users text-3xl"></i>
+            </div>
+            <div class="stat-title">Total Users</div>
+            <div class="stat-value">{{.Stats.TotalUsers}}</div>
+            <div class="stat-desc">
+                {{if gt .Stats.NewUsersToday 0}}
+                <span class="text-success">+{{.Stats.NewUsersToday}} today</span>
+                {{else}}
+                <span class="text-base-content/50">No new users today</span>
+                {{end}}
+            </div>
+        </div>
+        
+        <!-- Total Gists -->
+        <div class="stat bg-base-200 rounded-box">
+            <div class="stat-figure text-secondary">
+                <i class="fas fa-file-code text-3xl"></i>
+            </div>
+            <div class="stat-title">Total Gists</div>
+            <div class="stat-value">{{.Stats.TotalGists}}</div>
+            <div class="stat-desc">
+                {{if gt .Stats.NewGistsToday 0}}
+                <span class="text-success">+{{.Stats.NewGistsToday}} today</span>
+                {{else}}
+                <span class="text-base-content/50">No new gists today</span>
+                {{end}}
+            </div>
+        </div>
+        
+        <!-- Organizations -->
+        <div class="stat bg-base-200 rounded-box">
+            <div class="stat-figure text-accent">
+                <i class="fas fa-building text-3xl"></i>
+            </div>
+            <div class="stat-title">Organizations</div>
+            <div class="stat-value">{{.Stats.TotalOrganizations}}</div>
+            <div class="stat-desc">
+                {{if .Stats.ActiveOrganizations}}
+                <span class="text-success">{{.Stats.ActiveOrganizations}} active</span>
+                {{else}}
+                <span class="text-base-content/50">None active</span>
+                {{end}}
+            </div>
+        </div>
+        
+        <!-- System Health -->
+        <div class="stat bg-base-200 rounded-box">
+            <div class="stat-figure">
+                <i class="fas fa-heartbeat text-3xl {{if eq .Health.Status "healthy"}}text-success{{else if eq .Health.Status "warning"}}text-warning{{else}}text-error{{end}}"></i>
+            </div>
+            <div class="stat-title">System Health</div>
+            <div class="stat-value text-sm">{{.Health.Status | title}}</div>
+            <div class="stat-desc">
+                <span class="text-base-content/70">Uptime: {{.Health.Uptime}}</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts and Graphs -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Activity Chart -->
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <h2 class="card-title">
+                    <i class="fas fa-chart-line text-primary"></i>
+                    Activity Overview
+                </h2>
+                <div class="h-64 flex items-center justify-center text-base-content/50">
+                    <div id="activity-chart">
+                        <!-- Chart will be rendered here -->
+                        <i class="fas fa-spinner fa-spin mr-2"></i>
+                        Loading chart data...
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Storage Usage -->
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <h2 class="card-title">
+                    <i class="fas fa-hdd text-secondary"></i>
+                    Storage Usage
+                </h2>
+                <div class="space-y-4">
+                    <!-- Database -->
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>Database</span>
+                            <span>{{.Storage.DatabaseSize}} / {{.Storage.DatabaseLimit}}</span>
+                        </div>
+                        <progress class="progress progress-primary w-full" value="{{.Storage.DatabaseUsagePercent}}" max="100"></progress>
+                    </div>
+                    
+                    <!-- Files -->
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>File Storage</span>
+                            <span>{{.Storage.FileSize}} / {{.Storage.FileLimit}}</span>
+                        </div>
+                        <progress class="progress progress-secondary w-full" value="{{.Storage.FileUsagePercent}}" max="100"></progress>
+                    </div>
+                    
+                    <!-- Git Repositories -->
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>Git Repositories</span>
+                            <span>{{.Storage.GitSize}}</span>
+                        </div>
+                        <progress class="progress progress-accent w-full" value="{{.Storage.GitUsagePercent}}" max="100"></progress>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Gists -->
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="card-title">
+                        <i class="fas fa-file-code text-primary"></i>
+                        Recent Gists
+                    </h2>
+                    <a href="/admin/gists" class="btn btn-ghost btn-sm">View All</a>
+                </div>
+                
+                <div class="space-y-3">
+                    {{if .RecentGists}}
+                    {{range .RecentGists}}
+                    <div class="flex items-center justify-between p-3 bg-base-100 rounded-lg">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-{{if eq .Visibility "public"}}globe{{else if eq .Visibility "unlisted"}}link{{else}}lock{{end}} text-xs text-base-content/50"></i>
+                                <a href="/gist/{{.ID}}" class="font-medium truncate hover:text-primary">{{.Title}}</a>
+                            </div>
+                            <div class="text-sm text-base-content/70 mt-1">
+                                by <a href="/user/{{.User.Username}}" class="hover:text-primary">{{.User.Username}}</a>
+                                • {{.CreatedAt | timeAgo}}
+                                {{if .Language}}• {{.Language}}{{end}}
+                            </div>
+                        </div>
+                        <div class="text-xs text-base-content/50">
+                            {{.FileCount}} file{{if ne .FileCount 1}}s{{end}}
+                        </div>
+                    </div>
+                    {{end}}
+                    {{else}}
+                    <div class="text-center text-base-content/50 py-8">
+                        <i class="fas fa-file-code text-4xl mb-2"></i>
+                        <p>No gists created yet</p>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Users -->
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="card-title">
+                        <i class="fas fa-users text-secondary"></i>
+                        Recent Users
+                    </h2>
+                    <a href="/admin/users" class="btn btn-ghost btn-sm">View All</a>
+                </div>
+                
+                <div class="space-y-3">
+                    {{if .RecentUsers}}
+                    {{range .RecentUsers}}
+                    <div class="flex items-center justify-between p-3 bg-base-100 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="avatar">
+                                <div class="w-8 h-8 rounded-full">
+                                    <img src="{{.AvatarURL}}" alt="{{.Username}}" />
+                                </div>
+                            </div>
+                            <div>
+                                <div class="font-medium">
+                                    <a href="/user/{{.Username}}" class="hover:text-primary">{{.DisplayName}}</a>
+                                    {{if .IsAdmin}}<i class="fas fa-shield-alt text-warning text-xs ml-1" title="Admin"></i>{{end}}
+                                </div>
+                                <div class="text-sm text-base-content/70">@{{.Username}} • {{.CreatedAt | timeAgo}}</div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-base-content/50">
+                            {{.GistCount}} gist{{if ne .GistCount 1}}s{{end}}
+                        </div>
+                    </div>
+                    {{end}}
+                    {{else}}
+                    <div class="text-center text-base-content/50 py-8">
+                        <i class="fas fa-users text-4xl mb-2"></i>
+                        <p>No users registered yet</p>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Information -->
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="card-title">
+                <i class="fas fa-info-circle text-info"></i>
+                System Information
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                <div>
+                    <h3 class="font-semibold mb-2">Application</h3>
+                    <dl class="space-y-1 text-sm">
+                        <div class="flex justify-between">
+                            <dt class="text-base-content/70">Version:</dt>
+                            <dd class="font-mono">{{.SystemInfo.Version}}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-base-content/70">Build:</dt>
+                            <dd class="font-mono">{{.SystemInfo.BuildHash}}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-base-content/70">Runtime:</dt>
+                            <dd>{{.SystemInfo.GoVersion}}</dd>
+                        </div>
+                    </dl>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold mb-2">Server</h3>
+                    <dl class="space-y-1 text-sm">
+                        <div class="flex justify-between">
+                            <dt class="text-base-content/70">OS:</dt>
+                            <dd>{{.SystemInfo.OS}}/{{.SystemInfo.Arch}}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-base-content/70">Started:</dt>
+                            <dd>{{.SystemInfo.StartTime | timeAgo}}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-base-content/70">Port:</dt>
+                            <dd>{{.SystemInfo.Port}}</dd>
+                        </div>
+                    </dl>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold mb-2">Database</h3>
+                    <dl class="space-y-1 text-sm">
+                        <div class="flex justify-between">
+                            <dt class="text-base-content/70">Type:</dt>
+                            <dd>{{.SystemInfo.DatabaseType}}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-base-content/70">Status:</dt>
+                            <dd class="{{if .SystemInfo.DatabaseHealthy}}text-success{{else}}text-error{{end}}">
+                                {{if .SystemInfo.DatabaseHealthy}}Healthy{{else}}Unhealthy{{end}}
+                            </dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-base-content/70">Connections:</dt>
+                            <dd>{{.SystemInfo.DatabaseConnections}}</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function refreshDashboard() {
+    window.location.reload();
+}
+
+// Auto-refresh every 5 minutes
+setInterval(refreshDashboard, 300000);
+</script>
+{{end}}

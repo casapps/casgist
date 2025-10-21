@@ -1,0 +1,341 @@
+{{define "admin_dashboard"}}
+{{template "base" .}}
+{{end}}
+
+{{define "head"}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<style>
+    .stat-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+</style>
+{{end}}
+
+{{define "content"}}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">System overview and management</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Users -->
+        <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Users</p>
+                    <p class="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">{{.Stats.TotalUsers}}</p>
+                    <p class="mt-1 text-sm text-green-600 dark:text-green-400">
+                        <i class="fas fa-arrow-up"></i> {{.Stats.NewUsersToday}} today
+                    </p>
+                </div>
+                <div class="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
+                    <i class="fas fa-users text-2xl text-blue-600 dark:text-blue-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Gists -->
+        <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Gists</p>
+                    <p class="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">{{.Stats.TotalGists}}</p>
+                    <p class="mt-1 text-sm text-green-600 dark:text-green-400">
+                        <i class="fas fa-arrow-up"></i> {{.Stats.NewGistsToday}} today
+                    </p>
+                </div>
+                <div class="p-3 bg-green-100 dark:bg-green-900 rounded-full">
+                    <i class="fas fa-code text-2xl text-green-600 dark:text-green-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Storage Used -->
+        <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Storage Used</p>
+                    <p class="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">{{.Stats.StorageUsed}}</p>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        of {{.Stats.StorageTotal}}
+                    </p>
+                </div>
+                <div class="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-full">
+                    <i class="fas fa-hdd text-2xl text-yellow-600 dark:text-yellow-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Health -->
+        <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">System Health</p>
+                    <p class="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">{{.Stats.SystemHealth}}%</p>
+                    <p class="mt-1 text-sm {{if ge .Stats.SystemHealth 90}}text-green-600 dark:text-green-400{{else}}text-red-600 dark:text-red-400{{end}}">
+                        {{if ge .Stats.SystemHealth 90}}<i class="fas fa-check-circle"></i> Healthy{{else}}<i class="fas fa-exclamation-circle"></i> Issues{{end}}
+                    </p>
+                </div>
+                <div class="p-3 {{if ge .Stats.SystemHealth 90}}bg-green-100 dark:bg-green-900{{else}}bg-red-100 dark:bg-red-900{{end}} rounded-full">
+                    <i class="fas fa-heartbeat text-2xl {{if ge .Stats.SystemHealth 90}}text-green-600 dark:text-green-400{{else}}text-red-600 dark:text-red-400{{end}}"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- User Activity Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">User Activity (7 days)</h3>
+            <div class="chart-container">
+                <canvas id="userActivityChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Gist Creation Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Gist Creation (7 days)</h3>
+            <div class="chart-container">
+                <canvas id="gistCreationChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Recent Users -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Users</h3>
+                <a href="/admin/users" class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500">View all</a>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {{range .RecentUsers}}
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <img class="h-10 w-10 rounded-full" src="{{.AvatarURL}}" alt="{{.Username}}">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{.Username}}</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">{{.Email}}</p>
+                            </div>
+                        </div>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">{{.CreatedAt.Format "Jan 2"}}</span>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Gists -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Gists</h3>
+                <a href="/admin/gists" class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500">View all</a>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {{range .RecentGists}}
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{.Title}}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">by {{.User.Username}}</p>
+                        </div>
+                        <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">{{.CreatedAt.Format "3:04 PM"}}</span>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <a href="/admin/users" class="flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <i class="fas fa-users mr-2"></i> Manage Users
+            </a>
+            <a href="/admin/gists" class="flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <i class="fas fa-code mr-2"></i> Manage Gists
+            </a>
+            <a href="/admin/backup" class="flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <i class="fas fa-download mr-2"></i> Backup System
+            </a>
+            <a href="/admin/settings" class="flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <i class="fas fa-cog mr-2"></i> System Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- System Information -->
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Version Info -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
+            <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">System Information</h4>
+            <dl class="space-y-2">
+                <div>
+                    <dt class="text-sm text-gray-500 dark:text-gray-400">Version</dt>
+                    <dd class="text-sm font-medium text-gray-900 dark:text-white">{{.SystemInfo.Version}}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm text-gray-500 dark:text-gray-400">Uptime</dt>
+                    <dd class="text-sm font-medium text-gray-900 dark:text-white">{{.SystemInfo.Uptime}}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm text-gray-500 dark:text-gray-400">Database</dt>
+                    <dd class="text-sm font-medium text-gray-900 dark:text-white">{{.SystemInfo.Database}}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Resource Usage -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
+            <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Resource Usage</h4>
+            <dl class="space-y-2">
+                <div>
+                    <dt class="text-sm text-gray-500 dark:text-gray-400">CPU Usage</dt>
+                    <dd class="text-sm font-medium text-gray-900 dark:text-white">
+                        <div class="flex items-center">
+                            <span>{{.SystemInfo.CPUUsage}}%</span>
+                            <div class="ml-2 flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: {{.SystemInfo.CPUUsage}}%"></div>
+                            </div>
+                        </div>
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-sm text-gray-500 dark:text-gray-400">Memory Usage</dt>
+                    <dd class="text-sm font-medium text-gray-900 dark:text-white">
+                        <div class="flex items-center">
+                            <span>{{.SystemInfo.MemoryUsage}}%</span>
+                            <div class="ml-2 flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: {{.SystemInfo.MemoryUsage}}%"></div>
+                            </div>
+                        </div>
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-sm text-gray-500 dark:text-gray-400">Disk Usage</dt>
+                    <dd class="text-sm font-medium text-gray-900 dark:text-white">
+                        <div class="flex items-center">
+                            <span>{{.SystemInfo.DiskUsage}}%</span>
+                            <div class="ml-2 flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                <div class="bg-yellow-600 h-2 rounded-full" style="width: {{.SystemInfo.DiskUsage}}%"></div>
+                            </div>
+                        </div>
+                    </dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Recent Alerts -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
+            <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Recent Alerts</h4>
+            <div class="space-y-2">
+                {{range .RecentAlerts}}
+                <div class="flex items-start space-x-2">
+                    <i class="fas fa-{{.Icon}} text-{{.Color}}-500 mt-0.5"></i>
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-900 dark:text-white">{{.Message}}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{.Time.Format "3:04 PM"}}</p>
+                    </div>
+                </div>
+                {{else}}
+                <p class="text-sm text-gray-500 dark:text-gray-400">No recent alerts</p>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+// Chart.js global configuration
+Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#4B5563';
+Chart.defaults.borderColor = document.documentElement.classList.contains('dark') ? '#374151' : '#E5E7EB';
+
+// User Activity Chart
+const userActivityCtx = document.getElementById('userActivityChart').getContext('2d');
+const userActivityChart = new Chart(userActivityCtx, {
+    type: 'line',
+    data: {
+        labels: {{.ChartData.UserActivity.Labels}},
+        datasets: [{
+            label: 'Active Users',
+            data: {{.ChartData.UserActivity.Data}},
+            borderColor: '#6366F1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+
+// Gist Creation Chart
+const gistCreationCtx = document.getElementById('gistCreationChart').getContext('2d');
+const gistCreationChart = new Chart(gistCreationCtx, {
+    type: 'bar',
+    data: {
+        labels: {{.ChartData.GistCreation.Labels}},
+        datasets: [{
+            label: 'Gists Created',
+            data: {{.ChartData.GistCreation.Data}},
+            backgroundColor: '#10B981',
+            borderRadius: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+
+// Auto-refresh dashboard every 30 seconds
+setInterval(() => {
+    location.reload();
+}, 30000);
+</script>
+{{end}}

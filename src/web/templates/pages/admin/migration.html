@@ -1,0 +1,735 @@
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-base-content">OpenGist Migration</h1>
+            <p class="text-base-content/70 mt-1">Migrate your data from OpenGist instances</p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <a href="/admin/migrations/history" class="btn btn-ghost">
+                <i class="fas fa-history mr-2"></i>
+                Migration History
+            </a>
+        </div>
+    </div>
+    
+    <!-- Migration Wizard -->
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <!-- Progress Steps -->
+            <div class="steps w-full mb-8">
+                <div class="step step-primary" id="step-1">Connection</div>
+                <div class="step" id="step-2">Validation</div>
+                <div class="step" id="step-3">Selection</div>
+                <div class="step" id="step-4">Preview</div>
+                <div class="step" id="step-5">Migration</div>
+            </div>
+            
+            <!-- Step 1: Connection Configuration -->
+            <div id="wizard-step-1" class="wizard-step">
+                <div class="max-w-2xl mx-auto">
+                    <h2 class="text-2xl font-bold mb-4">
+                        <i class="fas fa-plug text-primary mr-2"></i>
+                        Connect to OpenGist Instance
+                    </h2>
+                    <p class="text-base-content/70 mb-6">
+                        Provide the connection details for your OpenGist instance that you want to migrate from.
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">OpenGist URL</span>
+                                <span class="label-text-alt">Required</span>
+                            </label>
+                            <input type="url" class="input input-bordered" placeholder="https://your-opengist.example.com" id="opengist-url" required />
+                            <label class="label">
+                                <span class="label-text-alt">The full URL to your OpenGist instance</span>
+                            </label>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Authentication Method</span>
+                            </label>
+                            <select class="select select-bordered" id="auth-method" onchange="toggleAuthFields()">
+                                <option value="none">None (Public Instance)</option>
+                                <option value="token">API Token</option>
+                                <option value="credentials">Username/Password</option>
+                                <option value="admin">Admin Access</option>
+                            </select>
+                        </div>
+                        
+                        <!-- API Token Field -->
+                        <div class="form-control" id="token-field" style="display: none;">
+                            <label class="label">
+                                <span class="label-text">API Token</span>
+                                <span class="label-text-alt">Required for private gists</span>
+                            </label>
+                            <input type="password" class="input input-bordered" placeholder="Enter your OpenGist API token" id="api-token" />
+                        </div>
+                        
+                        <!-- Username/Password Fields -->
+                        <div id="credentials-fields" style="display: none;">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Username</span>
+                                    </label>
+                                    <input type="text" class="input input-bordered" placeholder="Your OpenGist username" id="username" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Password</span>
+                                    </label>
+                                    <input type="password" class="input input-bordered" placeholder="Your OpenGist password" id="password" />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Admin Access Fields -->
+                        <div id="admin-fields" style="display: none;">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>Admin access allows migration of all users and data. Use with caution.</span>
+                            </div>
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Admin Token</span>
+                                </label>
+                                <input type="password" class="input input-bordered" placeholder="Admin API token" id="admin-token" />
+                            </div>
+                        </div>
+                        
+                        <!-- Connection Options -->
+                        <div class="form-control">
+                            <label class="cursor-pointer label">
+                                <span class="label-text">Skip SSL Verification</span>
+                                <input type="checkbox" class="toggle" id="skip-ssl" />
+                            </label>
+                            <label class="label">
+                                <span class="label-text-alt">Only use for testing with self-signed certificates</span>
+                            </label>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Connection Timeout (seconds)</span>
+                            </label>
+                            <input type="number" class="input input-bordered" value="30" min="5" max="300" id="timeout" />
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between mt-8">
+                        <div></div>
+                        <button onclick="testConnection()" class="btn btn-primary">
+                            <i class="fas fa-link mr-2"></i>
+                            Test Connection
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 2: Validation -->
+            <div id="wizard-step-2" class="wizard-step" style="display: none;">
+                <div class="max-w-2xl mx-auto">
+                    <h2 class="text-2xl font-bold mb-4">
+                        <i class="fas fa-check-circle text-success mr-2"></i>
+                        Connection Validation
+                    </h2>
+                    
+                    <div id="validation-results" class="space-y-4">
+                        <!-- Validation results will be populated here -->
+                    </div>
+                    
+                    <div class="flex justify-between mt-8">
+                        <button onclick="previousStep()" class="btn btn-ghost">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Back
+                        </button>
+                        <button onclick="nextStep()" class="btn btn-primary" id="validation-next" disabled>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                            Continue
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 3: Data Selection -->
+            <div id="wizard-step-3" class="wizard-step" style="display: none;">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-2xl font-bold mb-4">
+                        <i class="fas fa-list-check text-info mr-2"></i>
+                        Select Data to Migrate
+                    </h2>
+                    <p class="text-base-content/70 mb-6">
+                        Choose what data you want to migrate from the OpenGist instance.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Data Types -->
+                        <div class="card bg-base-100">
+                            <div class="card-body">
+                                <h3 class="card-title">Data Types</h3>
+                                
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <span class="label-text">Users</span>
+                                        <input type="checkbox" class="checkbox checkbox-primary" id="migrate-users" checked />
+                                    </label>
+                                </div>
+                                
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <span class="label-text">Gists</span>
+                                        <input type="checkbox" class="checkbox checkbox-primary" id="migrate-gists" checked />
+                                    </label>
+                                </div>
+                                
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <span class="label-text">Comments</span>
+                                        <input type="checkbox" class="checkbox checkbox-primary" id="migrate-comments" />
+                                    </label>
+                                </div>
+                                
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <span class="label-text">Stars</span>
+                                        <input type="checkbox" class="checkbox checkbox-primary" id="migrate-stars" />
+                                    </label>
+                                </div>
+                                
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <span class="label-text">User Settings</span>
+                                        <input type="checkbox" class="checkbox checkbox-primary" id="migrate-settings" />
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Migration Options -->
+                        <div class="card bg-base-100">
+                            <div class="card-body">
+                                <h3 class="card-title">Migration Options</h3>
+                                
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <span class="label-text">Preserve User IDs</span>
+                                        <input type="checkbox" class="checkbox checkbox-secondary" id="preserve-ids" />
+                                    </label>
+                                    <label class="label">
+                                        <span class="label-text-alt">May cause conflicts if users already exist</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <span class="label-text">Preserve Creation Dates</span>
+                                        <input type="checkbox" class="checkbox checkbox-secondary" id="preserve-dates" checked />
+                                    </label>
+                                </div>
+                                
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <span class="label-text">Update Existing Users</span>
+                                        <input type="checkbox" class="checkbox checkbox-secondary" id="update-users" />
+                                    </label>
+                                </div>
+                                
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <span class="label-text">Skip Private Gists</span>
+                                        <input type="checkbox" class="checkbox checkbox-warning" id="skip-private" />
+                                    </label>
+                                </div>
+                                
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Batch Size</span>
+                                    </label>
+                                    <input type="number" class="input input-bordered input-sm" value="50" min="1" max="1000" id="batch-size" />
+                                    <label class="label">
+                                        <span class="label-text-alt">Number of items to process at once</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="card bg-base-100 mt-6">
+                        <div class="card-body">
+                            <h3 class="card-title">Filters</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Date Range (From)</span>
+                                    </label>
+                                    <input type="date" class="input input-bordered" id="date-from" />
+                                </div>
+                                
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Date Range (To)</span>
+                                    </label>
+                                    <input type="date" class="input input-bordered" id="date-to" />
+                                </div>
+                                
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Max Items</span>
+                                    </label>
+                                    <input type="number" class="input input-bordered" placeholder="No limit" min="1" id="max-items" />
+                                </div>
+                            </div>
+                            
+                            <div class="form-control mt-4">
+                                <label class="label">
+                                    <span class="label-text">Specific Users (comma-separated)</span>
+                                </label>
+                                <textarea class="textarea textarea-bordered" placeholder="username1, username2, ..." rows="2" id="specific-users"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between mt-8">
+                        <button onclick="previousStep()" class="btn btn-ghost">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Back
+                        </button>
+                        <button onclick="nextStep()" class="btn btn-primary">
+                            <i class="fas fa-arrow-right ml-2"></i>
+                            Continue
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 4: Preview -->
+            <div id="wizard-step-4" class="wizard-step" style="display: none;">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-2xl font-bold mb-4">
+                        <i class="fas fa-eye text-accent mr-2"></i>
+                        Migration Preview
+                    </h2>
+                    <p class="text-base-content/70 mb-6">
+                        Review what will be migrated before starting the process.
+                    </p>
+                    
+                    <div id="migration-preview" class="space-y-4">
+                        <!-- Preview content will be populated here -->
+                    </div>
+                    
+                    <div class="flex justify-between mt-8">
+                        <button onclick="previousStep()" class="btn btn-ghost">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Back
+                        </button>
+                        <div class="space-x-2">
+                            <button onclick="runDryRun()" class="btn btn-outline">
+                                <i class="fas fa-play mr-2"></i>
+                                Dry Run
+                            </button>
+                            <button onclick="startMigration()" class="btn btn-primary">
+                                <i class="fas fa-rocket ml-2"></i>
+                                Start Migration
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 5: Migration Progress -->
+            <div id="wizard-step-5" class="wizard-step" style="display: none;">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-2xl font-bold mb-4">
+                        <i class="fas fa-rocket text-success mr-2"></i>
+                        Migration in Progress
+                    </h2>
+                    
+                    <div id="migration-status" class="space-y-6">
+                        <!-- Migration status will be populated here -->
+                    </div>
+                    
+                    <div class="flex justify-center mt-8">
+                        <button onclick="goToDashboard()" class="btn btn-primary" id="dashboard-btn" style="display: none;">
+                            <i class="fas fa-tachometer-alt mr-2"></i>
+                            Go to Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentStep = 1;
+let connectionData = {};
+let validationData = {};
+let migrationId = null;
+
+function toggleAuthFields() {
+    const method = document.getElementById('auth-method').value;
+    
+    document.getElementById('token-field').style.display = method === 'token' ? 'block' : 'none';
+    document.getElementById('credentials-fields').style.display = method === 'credentials' ? 'block' : 'none';
+    document.getElementById('admin-fields').style.display = method === 'admin' ? 'block' : 'none';
+}
+
+async function testConnection() {
+    const url = document.getElementById('opengist-url').value;
+    const authMethod = document.getElementById('auth-method').value;
+    
+    if (!url) {
+        showToast('Please enter the OpenGist URL', 'warning');
+        return;
+    }
+    
+    connectionData = {
+        url: url,
+        auth_method: authMethod,
+        skip_ssl: document.getElementById('skip-ssl').checked,
+        timeout: parseInt(document.getElementById('timeout').value)
+    };
+    
+    // Add authentication data based on method
+    switch (authMethod) {
+        case 'token':
+            connectionData.api_token = document.getElementById('api-token').value;
+            break;
+        case 'credentials':
+            connectionData.username = document.getElementById('username').value;
+            connectionData.password = document.getElementById('password').value;
+            break;
+        case 'admin':
+            connectionData.admin_token = document.getElementById('admin-token').value;
+            break;
+    }
+    
+    try {
+        const response = await fetch('/api/v1/admin/migration/opengist/test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CasGists.csrf
+            },
+            body: JSON.stringify(connectionData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            validationData = data;
+            showValidationResults(data);
+            nextStep();
+        } else {
+            showToast('Connection failed: ' + data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Connection error: ' + error.message, 'error');
+    }
+}
+
+function showValidationResults(data) {
+    const container = document.getElementById('validation-results');
+    
+    container.innerHTML = `
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span>Successfully connected to OpenGist instance!</span>
+        </div>
+        
+        <div class="stats shadow w-full">
+            <div class="stat">
+                <div class="stat-title">OpenGist Version</div>
+                <div class="stat-value text-primary">${data.version || 'Unknown'}</div>
+            </div>
+            <div class="stat">
+                <div class="stat-title">Total Users</div>
+                <div class="stat-value text-secondary">${data.user_count || 0}</div>
+            </div>
+            <div class="stat">
+                <div class="stat-title">Total Gists</div>
+                <div class="stat-value text-accent">${data.gist_count || 0}</div>
+            </div>
+        </div>
+        
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <div>
+                <p><strong>Access Level:</strong> ${data.access_level || 'Read-only'}</p>
+                <p><strong>API Endpoints Available:</strong> ${data.available_endpoints ? data.available_endpoints.join(', ') : 'Basic'}</p>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('validation-next').disabled = false;
+}
+
+function nextStep() {
+    if (currentStep < 5) {
+        // Hide current step
+        document.getElementById(`wizard-step-${currentStep}`).style.display = 'none';
+        document.getElementById(`step-${currentStep}`).classList.remove('step-primary');
+        
+        // Show next step
+        currentStep++;
+        document.getElementById(`wizard-step-${currentStep}`).style.display = 'block';
+        document.getElementById(`step-${currentStep}`).classList.add('step-primary');
+        
+        // Handle specific step logic
+        if (currentStep === 4) {
+            generatePreview();
+        }
+    }
+}
+
+function previousStep() {
+    if (currentStep > 1) {
+        // Hide current step
+        document.getElementById(`wizard-step-${currentStep}`).style.display = 'none';
+        document.getElementById(`step-${currentStep}`).classList.remove('step-primary');
+        
+        // Show previous step
+        currentStep--;
+        document.getElementById(`wizard-step-${currentStep}`).style.display = 'block';
+        document.getElementById(`step-${currentStep}`).classList.add('step-primary');
+    }
+}
+
+function generatePreview() {
+    const container = document.getElementById('migration-preview');
+    
+    const migrationConfig = {
+        users: document.getElementById('migrate-users').checked,
+        gists: document.getElementById('migrate-gists').checked,
+        comments: document.getElementById('migrate-comments').checked,
+        stars: document.getElementById('migrate-stars').checked,
+        settings: document.getElementById('migrate-settings').checked,
+        preserve_ids: document.getElementById('preserve-ids').checked,
+        preserve_dates: document.getElementById('preserve-dates').checked,
+        update_users: document.getElementById('update-users').checked,
+        skip_private: document.getElementById('skip-private').checked,
+        batch_size: parseInt(document.getElementById('batch-size').value),
+        date_from: document.getElementById('date-from').value,
+        date_to: document.getElementById('date-to').value,
+        max_items: document.getElementById('max-items').value ? parseInt(document.getElementById('max-items').value) : null,
+        specific_users: document.getElementById('specific-users').value.split(',').map(u => u.trim()).filter(u => u)
+    };
+    
+    let estimatedItems = 0;
+    if (migrationConfig.users) estimatedItems += validationData.user_count || 0;
+    if (migrationConfig.gists) estimatedItems += validationData.gist_count || 0;
+    
+    container.innerHTML = `
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <span>Estimated ${estimatedItems} items will be migrated</span>
+        </div>
+        
+        <div class="card bg-base-100">
+            <div class="card-body">
+                <h3 class="card-title">Migration Summary</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold mb-2">Data Types:</h4>
+                        <ul class="list-disc list-inside space-y-1">
+                            ${migrationConfig.users ? '<li>Users</li>' : ''}
+                            ${migrationConfig.gists ? '<li>Gists</li>' : ''}
+                            ${migrationConfig.comments ? '<li>Comments</li>' : ''}
+                            ${migrationConfig.stars ? '<li>Stars</li>' : ''}
+                            ${migrationConfig.settings ? '<li>User Settings</li>' : ''}
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2">Options:</h4>
+                        <ul class="list-disc list-inside space-y-1">
+                            ${migrationConfig.preserve_dates ? '<li>Preserve creation dates</li>' : ''}
+                            ${migrationConfig.preserve_ids ? '<li>Preserve user IDs</li>' : ''}
+                            ${migrationConfig.update_users ? '<li>Update existing users</li>' : ''}
+                            ${migrationConfig.skip_private ? '<li>Skip private gists</li>' : ''}
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p><strong>Batch Size:</strong> ${migrationConfig.batch_size} items per batch</p>
+                    ${migrationConfig.date_from ? `<p><strong>Date Range:</strong> ${migrationConfig.date_from} to ${migrationConfig.date_to || 'now'}</p>` : ''}
+                    ${migrationConfig.max_items ? `<p><strong>Item Limit:</strong> ${migrationConfig.max_items} items maximum</p>` : ''}
+                    ${migrationConfig.specific_users.length > 0 ? `<p><strong>Specific Users:</strong> ${migrationConfig.specific_users.join(', ')}</p>` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function runDryRun() {
+    try {
+        const response = await fetch('/api/v1/admin/migration/opengist/dry-run', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CasGists.csrf
+            },
+            body: JSON.stringify({
+                connection: connectionData,
+                config: getMigrationConfig()
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('Dry run completed successfully', 'success');
+            // TODO: Show dry run results
+        } else {
+            showToast('Dry run failed: ' + data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Dry run error: ' + error.message, 'error');
+    }
+}
+
+async function startMigration() {
+    if (!confirm('Are you sure you want to start the migration? This process may take a long time.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/v1/admin/migration/opengist/start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CasGists.csrf
+            },
+            body: JSON.stringify({
+                connection: connectionData,
+                config: getMigrationConfig()
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            migrationId = data.migration_id;
+            nextStep();
+            monitorMigration();
+        } else {
+            showToast('Failed to start migration: ' + data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Migration error: ' + error.message, 'error');
+    }
+}
+
+function getMigrationConfig() {
+    return {
+        users: document.getElementById('migrate-users').checked,
+        gists: document.getElementById('migrate-gists').checked,
+        comments: document.getElementById('migrate-comments').checked,
+        stars: document.getElementById('migrate-stars').checked,
+        settings: document.getElementById('migrate-settings').checked,
+        preserve_ids: document.getElementById('preserve-ids').checked,
+        preserve_dates: document.getElementById('preserve-dates').checked,
+        update_users: document.getElementById('update-users').checked,
+        skip_private: document.getElementById('skip-private').checked,
+        batch_size: parseInt(document.getElementById('batch-size').value),
+        date_from: document.getElementById('date-from').value,
+        date_to: document.getElementById('date-to').value,
+        max_items: document.getElementById('max-items').value ? parseInt(document.getElementById('max-items').value) : null,
+        specific_users: document.getElementById('specific-users').value.split(',').map(u => u.trim()).filter(u => u)
+    };
+}
+
+async function monitorMigration() {
+    const container = document.getElementById('migration-status');
+    
+    const interval = setInterval(async () => {
+        try {
+            const response = await fetch(`/api/v1/admin/migration/opengist/status/${migrationId}`);
+            const data = await response.json();
+            
+            if (response.ok) {
+                updateMigrationStatus(data);
+                
+                if (data.status === 'completed' || data.status === 'failed') {
+                    clearInterval(interval);
+                    if (data.status === 'completed') {
+                        document.getElementById('dashboard-btn').style.display = 'block';
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error monitoring migration:', error);
+        }
+    }, 2000);
+}
+
+function updateMigrationStatus(data) {
+    const container = document.getElementById('migration-status');
+    
+    const progressPercentage = Math.round((data.processed_items / data.total_items) * 100) || 0;
+    
+    container.innerHTML = `
+        <div class="alert ${data.status === 'failed' ? 'alert-error' : data.status === 'completed' ? 'alert-success' : 'alert-info'}">
+            <i class="fas fa-${data.status === 'failed' ? 'exclamation-circle' : data.status === 'completed' ? 'check-circle' : 'spinner fa-spin'}"></i>
+            <span>Status: ${data.status.charAt(0).toUpperCase() + data.status.slice(1)}</span>
+        </div>
+        
+        <div class="card bg-base-100">
+            <div class="card-body">
+                <h3 class="card-title">Progress</h3>
+                <div class="flex justify-between text-sm mb-2">
+                    <span>Items Processed</span>
+                    <span>${data.processed_items || 0} / ${data.total_items || 0}</span>
+                </div>
+                <progress class="progress progress-primary w-full" value="${progressPercentage}" max="100"></progress>
+                
+                <div class="grid grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <p><strong>Migrated Users:</strong> ${data.migrated_users || 0}</p>
+                        <p><strong>Migrated Gists:</strong> ${data.migrated_gists || 0}</p>
+                    </div>
+                    <div>
+                        <p><strong>Errors:</strong> ${data.error_count || 0}</p>
+                        <p><strong>Elapsed Time:</strong> ${data.elapsed_time || '0s'}</p>
+                    </div>
+                </div>
+                
+                ${data.current_operation ? `<p class="mt-2"><strong>Current:</strong> ${data.current_operation}</p>` : ''}
+                
+                ${data.errors && data.errors.length > 0 ? `
+                    <div class="mt-4">
+                        <h4 class="font-semibold">Errors:</h4>
+                        <div class="bg-base-200 p-2 rounded max-h-32 overflow-y-auto">
+                            ${data.errors.map(error => `<p class="text-sm text-error">${error}</p>`).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+}
+
+function goToDashboard() {
+    window.location.href = '/admin/dashboard';
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} mb-2`;
+    toast.innerHTML = `<span>${message}</span>`;
+    
+    const container = document.getElementById('toast-container');
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+</script>
+{{end}}

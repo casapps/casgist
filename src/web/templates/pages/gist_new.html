@@ -1,0 +1,511 @@
+{{define "gist_new"}}
+{{template "base" .}}
+{{end}}
+
+{{define "head"}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+{{end}}
+
+{{define "content"}}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <form id="gist-form" action="/api/v1/gists" method="POST" hx-post="/api/v1/gists" hx-ext="json-enc">
+        {{if .CSRFToken}}
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        {{end}}
+        <div class="space-y-6">
+            <!-- Header -->
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Create New Gist</h1>
+                <div class="flex space-x-2">
+                    <a href="/gists" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Cancel
+                    </a>
+                    <button type="submit" name="visibility" value="private" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <i class="fas fa-lock mr-2"></i> Create Private
+                    </button>
+                    <button type="submit" name="visibility" value="unlisted" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                        <i class="fas fa-link mr-2"></i> Create Unlisted
+                    </button>
+                    <button type="submit" name="visibility" value="public" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <i class="fas fa-globe mr-2"></i> Create Public
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Gist Info -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Title (optional)
+                        </label>
+                        <input type="text" name="title" id="title" 
+                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                               placeholder="My awesome gist">
+                    </div>
+                    
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Description (optional)
+                        </label>
+                        <textarea name="description" id="description" rows="3"
+                                  class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                  placeholder="What does this gist do?"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- File Upload Area -->
+            <div id="file-upload-area" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                    <input type="file" id="file-upload" multiple accept="*/*" class="hidden">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        <label for="file-upload" class="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 cursor-pointer">
+                            Click to upload files
+                        </label>
+                        or drag and drop
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Any file type up to 10MB each
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Files -->
+            <div id="files-container" class="space-y-4">
+                <div class="file-entry bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <input type="text" name="files[0].filename" 
+                                   class="flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                   placeholder="filename.ext" required>
+                            <select name="files[0].language" class="ml-2 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                <option value="">Auto-detect</option>
+                                <option value="javascript">JavaScript</option>
+                                <option value="python">Python</option>
+                                <option value="go">Go</option>
+                                <option value="java">Java</option>
+                                <option value="html">HTML</option>
+                                <option value="css">CSS</option>
+                                <option value="bash">Bash</option>
+                                <option value="json">JSON</option>
+                                <option value="yaml">YAML</option>
+                                <option value="markdown">Markdown</option>
+                                <option value="text">Plain Text</option>
+                            </select>
+                            <button type="button" onclick="removeFile(this)" class="ml-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-0">
+                        <textarea name="files[0].content" class="code-editor w-full p-4 font-mono text-sm bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100" rows="15" placeholder="Paste or type your code here..." required></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add File Button -->
+            <div>
+                <button type="button" onclick="addFile()" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-plus mr-2"></i> Add Another File
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/go/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/shell/shell.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/yaml/yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/markdown/markdown.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/sql/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/php/php.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/ruby/ruby.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/rust/rust.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/swift/swift.min.js"></script>
+
+<script>
+let fileCount = 0;
+const editors = {};
+
+// Language detection map
+const extensionToMode = {
+    // Web
+    '.js': 'javascript', '.mjs': 'javascript', '.jsx': 'javascript',
+    '.ts': 'javascript', '.tsx': 'javascript',
+    '.html': 'xml', '.htm': 'xml', '.xml': 'xml', '.svg': 'xml',
+    '.css': 'css', '.scss': 'css', '.sass': 'css',
+    '.json': 'javascript', '.jsonc': 'javascript',
+    
+    // Backend
+    '.py': 'python', '.pyw': 'python',
+    '.go': 'text/x-go',
+    '.java': 'text/x-java',
+    '.cs': 'text/x-csharp',
+    '.cpp': 'text/x-c++src', '.cc': 'text/x-c++src', '.cxx': 'text/x-c++src',
+    '.c': 'text/x-csrc', '.h': 'text/x-csrc',
+    '.php': 'php',
+    '.rb': 'ruby',
+    '.rs': 'rust',
+    '.swift': 'swift',
+    
+    // Scripting
+    '.sh': 'shell', '.bash': 'shell', '.zsh': 'shell',
+    '.ps1': 'powershell',
+    
+    // Data & Config
+    '.yml': 'yaml', '.yaml': 'yaml',
+    '.toml': 'toml',
+    '.ini': 'properties', '.cfg': 'properties', '.conf': 'properties',
+    '.sql': 'sql',
+    
+    // Docs
+    '.md': 'markdown', '.markdown': 'markdown',
+    '.tex': 'stex', '.latex': 'stex',
+    
+    // Default
+    '.txt': 'text/plain', '.log': 'text/plain'
+};
+
+// Initialize first editor
+initializeEditor(0);
+
+// File upload handling
+const fileUploadArea = document.getElementById('file-upload-area');
+const fileInput = document.getElementById('file-upload');
+
+// Click to upload
+fileInput.addEventListener('change', handleFileSelect);
+
+// Drag and drop
+fileUploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    fileUploadArea.classList.add('border-indigo-500', 'bg-indigo-50', 'dark:bg-indigo-900/20');
+});
+
+fileUploadArea.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    fileUploadArea.classList.remove('border-indigo-500', 'bg-indigo-50', 'dark:bg-indigo-900/20');
+});
+
+fileUploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    fileUploadArea.classList.remove('border-indigo-500', 'bg-indigo-50', 'dark:bg-indigo-900/20');
+    handleFileSelect({ target: { files: e.dataTransfer.files } });
+});
+
+function handleFileSelect(e) {
+    const files = Array.from(e.target.files);
+    
+    files.forEach(file => {
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            addFileFromUpload(file.name, event.target.result);
+        };
+        reader.readAsText(file);
+    });
+    
+    // Reset input
+    fileInput.value = '';
+}
+
+function addFileFromUpload(filename, content) {
+    fileCount++;
+    const container = document.getElementById('files-container');
+    const language = detectLanguageFromFilename(filename);
+    const mode = getCodeMirrorMode(language);
+    
+    const newFile = document.createElement('div');
+    newFile.className = 'file-entry bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700';
+    newFile.innerHTML = `
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <input type="text" name="files[${fileCount}].filename" value="${escapeHtml(filename)}"
+                       class="flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                       placeholder="filename.ext" required>
+                <select name="files[${fileCount}].language" onchange="updateEditorMode(${fileCount}, this.value)" class="ml-2 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <option value="">Auto-detect</option>
+                    <option value="javascript" ${language === 'javascript' ? 'selected' : ''}>JavaScript</option>
+                    <option value="python" ${language === 'python' ? 'selected' : ''}>Python</option>
+                    <option value="go" ${language === 'go' ? 'selected' : ''}>Go</option>
+                    <option value="java" ${language === 'java' ? 'selected' : ''}>Java</option>
+                    <option value="html" ${language === 'html' ? 'selected' : ''}>HTML</option>
+                    <option value="css" ${language === 'css' ? 'selected' : ''}>CSS</option>
+                    <option value="php" ${language === 'php' ? 'selected' : ''}>PHP</option>
+                    <option value="ruby" ${language === 'ruby' ? 'selected' : ''}>Ruby</option>
+                    <option value="rust" ${language === 'rust' ? 'selected' : ''}>Rust</option>
+                    <option value="cpp" ${language === 'cpp' ? 'selected' : ''}>C++</option>
+                    <option value="bash" ${language === 'bash' ? 'selected' : ''}>Bash</option>
+                    <option value="sql" ${language === 'sql' ? 'selected' : ''}>SQL</option>
+                    <option value="json" ${language === 'json' ? 'selected' : ''}>JSON</option>
+                    <option value="yaml" ${language === 'yaml' ? 'selected' : ''}>YAML</option>
+                    <option value="markdown" ${language === 'markdown' ? 'selected' : ''}>Markdown</option>
+                    <option value="text" ${language === 'text' ? 'selected' : ''}>Plain Text</option>
+                </select>
+                <button type="button" onclick="removeFile(this)" class="ml-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="p-0">
+            <textarea name="files[${fileCount}].content" class="code-editor w-full p-4 font-mono text-sm bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100" rows="15" placeholder="Paste or type your code here..." required>${escapeHtml(content)}</textarea>
+        </div>
+    `;
+    container.appendChild(newFile);
+    
+    // Initialize CodeMirror for the new file
+    setTimeout(() => {
+        initializeEditorWithMode(fileCount, mode);
+    }, 100);
+}
+
+function detectLanguageFromFilename(filename) {
+    const ext = filename.substring(filename.lastIndexOf('.')).toLowerCase();
+    
+    // Special filenames
+    const specialFiles = {
+        'dockerfile': 'dockerfile',
+        'makefile': 'makefile',
+        'gemfile': 'ruby',
+        'rakefile': 'ruby',
+        'package.json': 'json',
+        'tsconfig.json': 'json',
+        '.gitignore': 'text',
+        '.env': 'bash',
+        'requirements.txt': 'text'
+    };
+    
+    const lowerFilename = filename.toLowerCase();
+    if (specialFiles[lowerFilename]) {
+        return specialFiles[lowerFilename];
+    }
+    
+    // Extension mapping to language
+    const extToLang = {
+        '.js': 'javascript', '.mjs': 'javascript', '.jsx': 'javascript',
+        '.ts': 'javascript', '.tsx': 'javascript',
+        '.py': 'python',
+        '.go': 'go',
+        '.java': 'java',
+        '.cs': 'csharp',
+        '.cpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp',
+        '.c': 'c', '.h': 'c',
+        '.php': 'php',
+        '.rb': 'ruby',
+        '.rs': 'rust',
+        '.swift': 'swift',
+        '.sh': 'bash', '.bash': 'bash',
+        '.sql': 'sql',
+        '.html': 'html', '.htm': 'html',
+        '.css': 'css', '.scss': 'css',
+        '.json': 'json',
+        '.yml': 'yaml', '.yaml': 'yaml',
+        '.md': 'markdown',
+        '.xml': 'xml'
+    };
+    
+    return extToLang[ext] || 'text';
+}
+
+function getCodeMirrorMode(language) {
+    const modeMap = {
+        'javascript': 'javascript',
+        'python': 'python',
+        'go': 'text/x-go',
+        'java': 'text/x-java',
+        'csharp': 'text/x-csharp',
+        'cpp': 'text/x-c++src',
+        'c': 'text/x-csrc',
+        'html': 'xml',
+        'css': 'css',
+        'php': 'php',
+        'ruby': 'ruby',
+        'rust': 'rust',
+        'swift': 'swift',
+        'bash': 'shell',
+        'sql': 'sql',
+        'json': 'javascript',
+        'yaml': 'yaml',
+        'markdown': 'markdown',
+        'xml': 'xml',
+        'text': 'text/plain'
+    };
+    
+    return modeMap[language] || 'text/plain';
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function initializeEditor(index) {
+    initializeEditorWithMode(index, 'javascript');
+}
+
+function initializeEditorWithMode(index, mode) {
+    const textarea = document.querySelector(`textarea[name="files[${index}].content"]`);
+    if (textarea && !editors[index]) {
+        editors[index] = CodeMirror.fromTextArea(textarea, {
+            lineNumbers: true,
+            theme: 'monokai',
+            mode: mode,
+            tabSize: 4,
+            indentWithTabs: false,
+            lineWrapping: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            showCursorWhenSelecting: true,
+            styleActiveLine: true,
+            continueComments: true
+        });
+        
+        // Auto-detect and update mode based on filename
+        const filenameInput = document.querySelector(`input[name="files[${index}].filename"]`);
+        if (filenameInput) {
+            filenameInput.addEventListener('change', (e) => {
+                const language = detectLanguageFromFilename(e.target.value);
+                const newMode = getCodeMirrorMode(language);
+                editors[index].setOption('mode', newMode);
+                
+                // Update language dropdown
+                const langSelect = e.target.parentElement.querySelector('select');
+                if (langSelect) {
+                    langSelect.value = language;
+                }
+            });
+        }
+    }
+}
+
+function addFile() {
+    fileCount++;
+    const container = document.getElementById('files-container');
+    const newFile = document.createElement('div');
+    newFile.className = 'file-entry bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700';
+    newFile.innerHTML = `
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <input type="text" name="files[${fileCount}].filename" 
+                       class="flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                       placeholder="filename.ext" required>
+                <select name="files[${fileCount}].language" onchange="updateEditorMode(${fileCount}, this.value)" class="ml-2 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <option value="">Auto-detect</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="python">Python</option>
+                    <option value="go">Go</option>
+                    <option value="java">Java</option>
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                    <option value="bash">Bash</option>
+                    <option value="json">JSON</option>
+                    <option value="yaml">YAML</option>
+                    <option value="markdown">Markdown</option>
+                    <option value="text">Plain Text</option>
+                </select>
+                <button type="button" onclick="removeFile(this)" class="ml-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="p-0">
+            <textarea name="files[${fileCount}].content" class="code-editor w-full p-4 font-mono text-sm bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100" rows="15" placeholder="Paste or type your code here..." required></textarea>
+        </div>
+    `;
+    container.appendChild(newFile);
+    initializeEditor(fileCount);
+}
+
+function removeFile(button) {
+    const fileEntry = button.closest('.file-entry');
+    const filesContainer = document.getElementById('files-container');
+    
+    if (filesContainer.children.length > 1) {
+        fileEntry.remove();
+    } else {
+        alert('At least one file is required');
+    }
+}
+
+function updateEditorMode(index, language) {
+    const modeMap = {
+        'javascript': 'javascript',
+        'python': 'python',
+        'go': 'text/x-go',
+        'java': 'text/x-java',
+        'html': 'xml',
+        'css': 'css',
+        'bash': 'shell',
+        'json': 'javascript',
+        'yaml': 'yaml',
+        'markdown': 'markdown',
+        'text': 'text/plain'
+    };
+    
+    if (editors[index] && modeMap[language]) {
+        editors[index].setOption('mode', modeMap[language]);
+    }
+}
+
+// Handle form submission
+htmx.on("htmx:afterRequest", function(evt) {
+    if (evt.detail.xhr.status === 201) {
+        const response = JSON.parse(evt.detail.xhr.responseText);
+        window.location.href = `/gists/${response.id}`;
+    }
+});
+
+// Update CodeMirror values before form submission
+document.getElementById('gist-form').addEventListener('htmx:configRequest', function(evt) {
+    // Update all CodeMirror values
+    Object.keys(editors).forEach(index => {
+        editors[index].save();
+    });
+    
+    // Convert form data to proper structure
+    const formData = new FormData(evt.target);
+    const data = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        visibility: formData.get('visibility'),
+        files: []
+    };
+    
+    // Collect all files
+    let fileIndex = 0;
+    while (formData.has(`files[${fileIndex}].filename`)) {
+        data.files.push({
+            filename: formData.get(`files[${fileIndex}].filename`),
+            content: formData.get(`files[${fileIndex}].content`),
+            language: formData.get(`files[${fileIndex}].language`)
+        });
+        fileIndex++;
+    }
+    
+    evt.detail.parameters = data;
+});
+</script>
+{{end}}

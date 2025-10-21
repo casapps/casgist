@@ -1,0 +1,185 @@
+{{define "home"}}
+{{template "base" .}}
+{{end}}
+
+{{define "content"}}
+<div class="relative bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-indigo-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div class="text-center">
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
+                Your Code Snippets,
+                <span class="text-indigo-600 dark:text-indigo-400">Self-Hosted</span>
+            </h1>
+            <p class="mt-3 max-w-2xl mx-auto text-xl text-gray-600 dark:text-gray-300">
+                CasGists is a powerful, self-hosted alternative to GitHub Gists. Share code snippets, manage versions, and collaborate - all on your own server.
+            </p>
+            <div class="mt-8 flex justify-center space-x-4">
+                {{if .User}}
+                <a href="/gists/new" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-plus mr-2"></i> Create New Gist
+                </a>
+                <a href="/gists" class="inline-flex items-center px-6 py-3 border border-gray-300 dark:border-gray-600 text-base font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-file-code mr-2"></i> My Gists
+                </a>
+                {{else}}
+                <a href="/register" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-rocket mr-2"></i> Get Started
+                </a>
+                <a href="/login" class="inline-flex items-center px-6 py-3 border border-gray-300 dark:border-gray-600 text-base font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-sign-in-alt mr-2"></i> Login
+                </a>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="py-16 bg-white dark:bg-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Everything You Need</h2>
+            <p class="mt-4 text-lg text-gray-600 dark:text-gray-300">
+                Powerful features designed for developers, by developers
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Feature 1 -->
+            <div class="text-center">
+                <div class="flex justify-center mb-4">
+                    <div class="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+                        <i class="fas fa-lock text-2xl text-indigo-600 dark:text-indigo-400"></i>
+                    </div>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Private & Secure</h3>
+                <p class="mt-2 text-gray-600 dark:text-gray-300">
+                    Your code stays on your server. Public, unlisted, or private - you control visibility.
+                </p>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div class="text-center">
+                <div class="flex justify-center mb-4">
+                    <div class="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+                        <i class="fas fa-code-branch text-2xl text-indigo-600 dark:text-indigo-400"></i>
+                    </div>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Git Version Control</h3>
+                <p class="mt-2 text-gray-600 dark:text-gray-300">
+                    Full Git history for every gist. Track changes, view diffs, and restore versions.
+                </p>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="text-center">
+                <div class="flex justify-center mb-4">
+                    <div class="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+                        <i class="fas fa-users text-2xl text-indigo-600 dark:text-indigo-400"></i>
+                    </div>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Teams & Organizations</h3>
+                <p class="mt-2 text-gray-600 dark:text-gray-300">
+                    Create organizations, manage teams, and collaborate on shared code snippets.
+                </p>
+            </div>
+            
+            <!-- Feature 4 -->
+            <div class="text-center">
+                <div class="flex justify-center mb-4">
+                    <div class="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+                        <i class="fas fa-search text-2xl text-indigo-600 dark:text-indigo-400"></i>
+                    </div>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Powerful Search</h3>
+                <p class="mt-2 text-gray-600 dark:text-gray-300">
+                    Find gists instantly with full-text search across titles, descriptions, and content.
+                </p>
+            </div>
+            
+            <!-- Feature 5 -->
+            <div class="text-center">
+                <div class="flex justify-center mb-4">
+                    <div class="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+                        <i class="fas fa-mobile-alt text-2xl text-indigo-600 dark:text-indigo-400"></i>
+                    </div>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Works Offline</h3>
+                <p class="mt-2 text-gray-600 dark:text-gray-300">
+                    Progressive Web App with full offline support. Access your gists anywhere.
+                </p>
+            </div>
+            
+            <!-- Feature 6 -->
+            <div class="text-center">
+                <div class="flex justify-center mb-4">
+                    <div class="w-16 h-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-2xl text-indigo-600 dark:text-indigo-400"></i>
+                    </div>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">GDPR Compliant</h3>
+                <p class="mt-2 text-gray-600 dark:text-gray-300">
+                    Built-in compliance features for GDPR, SOC2, and HIPAA requirements.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Public Gists -->
+{{if .RecentGists}}
+<div class="py-16 bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Recent Public Gists</h2>
+            <p class="mt-4 text-lg text-gray-600 dark:text-gray-300">
+                Discover what the community is sharing
+            </p>
+        </div>
+        
+        <div class="grid gap-6">
+            {{range .RecentGists}}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            <a href="/gists/{{.ID}}" class="hover:text-indigo-600 dark:hover:text-indigo-400">
+                                {{if .Title}}{{.Title}}{{else}}Untitled Gist{{end}}
+                            </a>
+                        </h3>
+                        {{if .Description}}
+                        <p class="mt-1 text-gray-600 dark:text-gray-300">{{.Description}}</p>
+                        {{end}}
+                        <div class="mt-2 flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                            <a href="/users/{{.User.Username}}" class="hover:text-indigo-600 dark:hover:text-indigo-400">
+                                <i class="fas fa-user mr-1"></i> {{.User.Username}}
+                            </a>
+                            <span>
+                                <i class="fas fa-clock mr-1"></i> {{.CreatedAt.Format "Jan 2, 2006"}}
+                            </span>
+                            {{if .Language}}
+                            <span>
+                                <i class="fas fa-code mr-1"></i> {{.Language}}
+                            </span>
+                            {{end}}
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            <i class="fas fa-globe mr-1"></i> Public
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {{end}}
+        </div>
+        
+        <div class="mt-8 text-center">
+            <a href="/discover" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium">
+                View all public gists <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+    </div>
+</div>
+{{end}}
+{{end}}
