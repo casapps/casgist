@@ -11,7 +11,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
-
 )
 
 // Service handles email operations
@@ -44,7 +43,7 @@ func (s *Service) QueueEmail(email *EmailQueue) error {
 	if email.ID == uuid.Nil {
 		email.ID = uuid.New()
 	}
-	
+
 	if email.Status == "" {
 		email.Status = EmailStatusPending
 	}
@@ -169,7 +168,7 @@ func (s *Service) SendUserFollowedNotification(recipientID uuid.UUID, recipientE
 func (s *Service) ProcessEmailQueue(ctx context.Context) error {
 	// Get pending emails ordered by priority and creation time
 	var emails []EmailQueue
-	if err := s.db.Where("status = ? AND (scheduled_at IS NULL OR scheduled_at <= ?)", 
+	if err := s.db.Where("status = ? AND (scheduled_at IS NULL OR scheduled_at <= ?)",
 		EmailStatusPending, time.Now()).
 		Order("priority ASC, created_at ASC").
 		Limit(10). // Process 10 emails at a time
@@ -337,9 +336,31 @@ func (s *Service) CreateEmailPreference(userID uuid.UUID) error {
 
 // UpdateEmailPreference updates user email preferences
 func (s *Service) UpdateEmailPreference(userID uuid.UUID, updates map[string]bool) error {
-	return s.db.Model(&EmailPreference{}).
-		Where("user_id = ?", userID).
-		Updates(updates).Error
+	var preference EmailPreference
+	if err := s.db.Where("user_id = ?", userID).First(&preference).Error; err != nil {
+		return err
+	}
+
+	if value, ok := updates["notify_gist_starred"]; ok {
+		preference.NotifyGistStarred = value
+	}
+	if value, ok := updates["notify_gist_forked"]; ok {
+		preference.NotifyGistForked = value
+	}
+	if value, ok := updates["notify_gist_commented"]; ok {
+		preference.NotifyGistCommented = value
+	}
+	if value, ok := updates["notify_followed"]; ok {
+		preference.NotifyFollowed = value
+	}
+	if value, ok := updates["notify_weekly_digest"]; ok {
+		preference.NotifyWeeklyDigest = value
+	}
+	if value, ok := updates["notify_system_alerts"]; ok {
+		preference.NotifySystemAlerts = value
+	}
+
+	return s.db.Save(&preference).Error
 }
 
 // GetEmailPreference gets user email preferences
@@ -354,7 +375,7 @@ func (s *Service) GetEmailPreference(userID uuid.UUID) (*EmailPreference, error)
 // VerifyEmail verifies an email address using token
 func (s *Service) VerifyEmail(token string) error {
 	var verificationToken EmailVerificationToken
-	if err := s.db.Where("token = ? AND used = ? AND expires_at > ?", 
+	if err := s.db.Where("token = ? AND used = ? AND expires_at > ?",
 		token, false, time.Now()).First(&verificationToken).Error; err != nil {
 		return fmt.Errorf("invalid or expired verification token")
 	}
@@ -377,7 +398,7 @@ func (s *Service) VerifyEmail(token string) error {
 // VerifyPasswordResetToken verifies a password reset token
 func (s *Service) VerifyPasswordResetToken(token string) (*PasswordResetToken, error) {
 	var resetToken PasswordResetToken
-	if err := s.db.Where("token = ? AND used = ? AND expires_at > ?", 
+	if err := s.db.Where("token = ? AND used = ? AND expires_at > ?",
 		token, false, time.Now()).First(&resetToken).Error; err != nil {
 		return nil, fmt.Errorf("invalid or expired reset token")
 	}
@@ -473,16 +494,16 @@ func (s *Service) SendBackupCompleteNotification(userID uuid.UUID, email, userna
 // SendMigrationCompleteNotification sends notification when migration is completed
 func (s *Service) SendMigrationCompleteNotification(userID uuid.UUID, email, username string, migrationStats MigrationStats) error {
 	data := EmailData{
-		"UserName":           username,
-		"MigrationDate":      migrationStats.Date.Format("January 2, 2006 at 3:04 PM"),
-		"SourcePlatform":     migrationStats.SourcePlatform,
-		"Duration":           formatDuration(migrationStats.Duration),
-		"GistCount":          migrationStats.GistCount,
-		"StarCount":          migrationStats.StarCount,
-		"FollowerCount":      migrationStats.FollowerCount,
-		"SkippedItems":       migrationStats.SkippedItems,
-		"DashboardURL":       fmt.Sprintf("%s/dashboard", s.cfg.GetString("server.url")),
-		"SupportURL":         fmt.Sprintf("%s/support", s.cfg.GetString("server.url")),
+		"UserName":       username,
+		"MigrationDate":  migrationStats.Date.Format("January 2, 2006 at 3:04 PM"),
+		"SourcePlatform": migrationStats.SourcePlatform,
+		"Duration":       formatDuration(migrationStats.Duration),
+		"GistCount":      migrationStats.GistCount,
+		"StarCount":      migrationStats.StarCount,
+		"FollowerCount":  migrationStats.FollowerCount,
+		"SkippedItems":   migrationStats.SkippedItems,
+		"DashboardURL":   fmt.Sprintf("%s/dashboard", s.cfg.GetString("server.url")),
+		"SupportURL":     fmt.Sprintf("%s/support", s.cfg.GetString("server.url")),
 	}
 
 	// Add migration report URL if there are skipped items

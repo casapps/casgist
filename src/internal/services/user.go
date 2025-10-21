@@ -72,7 +72,7 @@ func (s *UserService) CreateUser(user *models.User) error {
 	// Create email preferences with defaults
 	if s.emailService != nil {
 		s.emailService.CreateEmailPreference(user.ID)
-		
+
 		// Send welcome email if enabled
 		if s.cfg.GetBool("email.enabled") && s.cfg.GetBool("email.send_welcome") {
 			go s.emailService.SendWelcomeEmail(user.Email, user.Username)
@@ -184,7 +184,7 @@ func (s *UserService) UpdateUser(user *models.User) error {
 		newUserCacheKey := cache.UserKey(user.Username)
 		s.cache.Delete(ctx, oldUserCacheKey)
 		s.cache.Delete(ctx, newUserCacheKey)
-		
+
 		// Also invalidate user stats cache
 		userStatsKey := cache.UserStatsKey(user.ID.String())
 		s.cache.Delete(ctx, userStatsKey)
@@ -286,6 +286,9 @@ func (s *UserService) FollowUser(followerID, followingID uuid.UUID) error {
 	if followerID == followingID {
 		return errors.New("cannot follow yourself")
 	}
+	if s.IsFollowing(followerID, followingID) {
+		return errors.New("already following this user")
+	}
 
 	follow := &models.UserFollow{
 		FollowerID:  followerID,
@@ -293,7 +296,7 @@ func (s *UserService) FollowUser(followerID, followingID uuid.UUID) error {
 	}
 
 	if err := s.db.Create(follow).Error; err != nil {
-		if strings.Contains(err.Error(), "duplicate") {
+		if errors.Is(err, gorm.ErrDuplicatedKey) || strings.Contains(strings.ToLower(err.Error()), "duplicate") || strings.Contains(strings.ToLower(err.Error()), "unique") {
 			return errors.New("already following this user")
 		}
 		return err
@@ -303,7 +306,7 @@ func (s *UserService) FollowUser(followerID, followingID uuid.UUID) error {
 	if s.emailService != nil {
 		var followerUser, followingUser models.User
 		if s.db.First(&followerUser, "id = ?", followerID).Error == nil &&
-		   s.db.First(&followingUser, "id = ?", followingID).Error == nil {
+			s.db.First(&followingUser, "id = ?", followingID).Error == nil {
 			go s.emailService.SendUserFollowedNotification(
 				followingID,
 				followingUser.Email,
@@ -364,6 +367,9 @@ func (s *UserService) BlockUser(blockerID, blockedID uuid.UUID, reason string) e
 	if blockerID == blockedID {
 		return errors.New("cannot block yourself")
 	}
+	if s.IsBlocked(blockerID, blockedID) {
+		return errors.New("user already blocked")
+	}
 
 	// Remove any follow relationships
 	s.db.Delete(&models.UserFollow{}, "follower_id = ? AND following_id = ?", blockerID, blockedID)
@@ -376,7 +382,7 @@ func (s *UserService) BlockUser(blockerID, blockedID uuid.UUID, reason string) e
 	}
 
 	if err := s.db.Create(block).Error; err != nil {
-		if strings.Contains(err.Error(), "duplicate") {
+		if errors.Is(err, gorm.ErrDuplicatedKey) || strings.Contains(strings.ToLower(err.Error()), "duplicate") || strings.Contains(strings.ToLower(err.Error()), "unique") {
 			return errors.New("user already blocked")
 		}
 		return err
@@ -429,7 +435,7 @@ func isValidUsername(username string) bool {
 }
 
 func isAlphanumeric(char byte) bool {
-	return (char >= 'a' && char <= 'z') || 
-		   (char >= 'A' && char <= 'Z') || 
-		   (char >= '0' && char <= '9')
+	return (char >= 'a' && char <= 'z') ||
+		(char >= 'A' && char <= 'Z') ||
+		(char >= '0' && char <= '9')
 }

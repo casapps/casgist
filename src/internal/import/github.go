@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/casapps/casgists/src/internal/database/models"
@@ -28,9 +27,9 @@ func NewGitHubImporter(token string) *GitHubImporter {
 
 // GitHubGist represents a GitHub gist from the API
 type GitHubGist struct {
-	ID          string                 `json:"id"`
-	Description string                 `json:"description"`
-	Public      bool                   `json:"public"`
+	ID          string                `json:"id"`
+	Description string                `json:"description"`
+	Public      bool                  `json:"public"`
 	CreatedAt   time.Time             `json:"created_at"`
 	UpdatedAt   time.Time             `json:"updated_at"`
 	Files       map[string]GitHubFile `json:"files"`

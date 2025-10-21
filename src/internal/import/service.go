@@ -32,38 +32,39 @@ type ImportRequest struct {
 	Platform string `json:"platform" validate:"required"`
 	Token    string `json:"token" validate:"required"`
 	Options  struct {
-		ImportAsPrivate   bool     `json:"import_as_private"`
-		AddPlatformTag    bool     `json:"add_platform_tag"`
-		PreserveDates     bool     `json:"preserve_dates"`
-		OrganizationName  string   `json:"organization_name"`
-		SelectedGistIDs   []string `json:"selected_gist_ids"`
-		GitLabURL         string   `json:"gitlab_url"`
-		GiteaURL          string   `json:"gitea_url"`
-		ForgejoURL        string   `json:"forgejo_url"`
+		ImportAsPrivate  bool     `json:"import_as_private"`
+		AddPlatformTag   bool     `json:"add_platform_tag"`
+		PreserveDates    bool     `json:"preserve_dates"`
+		OrganizationName string   `json:"organization_name"`
+		SelectedGistIDs  []string `json:"selected_gist_ids"`
+		GitLabURL        string   `json:"gitlab_url"`
+		GiteaURL         string   `json:"gitea_url"`
+		ForgejoURL       string   `json:"forgejo_url"`
 	} `json:"options"`
 }
 
 // ImportResult represents the result of an import operation
 type ImportResult struct {
-	JobID            uuid.UUID `json:"job_id"`
-	Platform         string    `json:"platform"`
-	TotalGists       int       `json:"total_gists"`
-	SuccessfulImports int       `json:"successful_imports"`
-	FailedImports    int       `json:"failed_imports"`
-	Errors           []string  `json:"errors"`
-	Duration         string    `json:"duration"`
-	ImportedGistIDs  []uuid.UUID `json:"imported_gist_ids"`
+	JobID             uuid.UUID   `json:"job_id"`
+	Platform          string      `json:"platform"`
+	TotalGists        int         `json:"total_gists"`
+	SuccessfulImports int         `json:"successful_imports"`
+	FailedImports     int         `json:"failed_imports"`
+	Errors            []string    `json:"errors"`
+	Duration          string      `json:"duration"`
+	ImportedGistIDs   []uuid.UUID `json:"imported_gist_ids"`
 }
 
 // StartImport starts an import operation
 func (im *ImportManager) StartImport(ctx context.Context, userID uuid.UUID, req *ImportRequest) (*ImportResult, error) {
 	// Create import job record
+	now := time.Now()
 	job := &models.ImportJob{
-		ID:         uuid.New(),
-		UserID:     &userID,
-		SourceType: req.Platform,
-		Status:     "processing",
-		StartedAt:  &time.Time{},
+		ID:        uuid.New(),
+		Platform:  strings.ToLower(req.Platform),
+		Status:    string(models.ImportStatusProcessing),
+		StartedAt: now,
+		CreatedBy: userID,
 	}
 
 	if err := im.db.Create(job).Error; err != nil {
@@ -97,8 +98,11 @@ func (im *ImportManager) StartImport(ctx context.Context, userID uuid.UUID, req 
 
 	// Validate token first
 	if err := importer.ValidateToken(ctx); err != nil {
-		job.Status = "failed"
-		job.ErrorMessage = err.Error()
+		job.Status = string(models.ImportStatusFailed)
+		job.ErrorCount = 1
+		job.Result = err.Error()
+		completed := time.Now()
+		job.CompletedAt = &completed
 		im.db.Save(job)
 		return nil, fmt.Errorf("token validation failed: %w", err)
 	}
@@ -119,12 +123,15 @@ func (im *ImportManager) StartImport(ctx context.Context, userID uuid.UUID, req 
 
 		// Add platform tag
 		if req.Options.AddPlatformTag {
-			if gist.Tags == "" {
-				gist.Tags = req.Platform
+			if gist.TagsString == "" {
+				gist.TagsString = strings.ToLower(req.Platform)
 			} else {
-				gist.Tags = fmt.Sprintf("%s,%s", gist.Tags, req.Platform)
+				gist.TagsString = fmt.Sprintf("%s,%s", gist.TagsString, strings.ToLower(req.Platform))
 			}
 		}
+
+		// Associate gist with user
+		gist.UserID = &userID
 
 		// Preserve creation dates if requested
 		if !req.Options.PreserveDates {
@@ -143,27 +150,25 @@ func (im *ImportManager) StartImport(ctx context.Context, userID uuid.UUID, req 
 		successCount++
 
 		// Create import item record
+		processed := time.Now()
 		item := &models.ImportItem{
 			ID:          uuid.New(),
 			ImportJobID: job.ID,
 			GistID:      &gist.ID,
-			Status:      "completed",
-			ProcessedAt: &time.Time{},
+			Status:      models.ImportStatusCompleted,
+			ProcessedAt: &processed,
 		}
 		im.db.Create(item)
 	}
 
 	// Update job status
 	duration := time.Since(startTime)
-	job.Status = "completed"
-	job.ProcessedItems = len(importedGists) + len(importErrors)
-	job.SuccessfulItems = successCount
-	job.FailedItems = len(importErrors)
-	job.CompletedAt = &time.Time{}
-	
-	if len(importErrors) > 0 {
-		job.ErrorMessage = fmt.Sprintf("%d errors occurred during import", len(importErrors))
-	}
+	job.ItemsTotal = len(importedGists) + len(importErrors)
+	job.ItemsImported = successCount
+	job.ErrorCount = len(importErrors)
+	job.Status = string(models.ImportStatusCompleted)
+	completed := time.Now()
+	job.CompletedAt = &completed
 
 	im.db.Save(job)
 
@@ -173,15 +178,18 @@ func (im *ImportManager) StartImport(ctx context.Context, userID uuid.UUID, req 
 		errorStrings = append(errorStrings, err.Error())
 	}
 
+	job.Result = strings.Join(errorStrings, "\n")
+	im.db.Save(job)
+
 	return &ImportResult{
 		JobID:             job.ID,
 		Platform:          req.Platform,
 		TotalGists:        len(importedGists) + len(importErrors),
 		SuccessfulImports: successCount,
 		FailedImports:     len(importErrors),
-		Errors:           errorStrings,
-		Duration:         duration.String(),
-		ImportedGistIDs:  savedGistIDs,
+		Errors:            errorStrings,
+		Duration:          duration.String(),
+		ImportedGistIDs:   savedGistIDs,
 	}, nil
 }
 

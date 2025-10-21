@@ -30,11 +30,11 @@ func (s *Server) setupRoutes() {
 	// Static files (now handled in setupStaticRoutes)
 	s.setupStaticRoutes()
 
-	// Public routes  
+	// Public routes
 	s.echo.GET("/", s.handleHome)
 	s.echo.GET("/login", s.handleLoginPage)
 	s.echo.GET("/register", s.handleRegisterPage)
-	
+
 	// Web gist routes (with auth)
 	s.echo.GET("/gists", s.handleGistListPage, authMiddleware.Auth())
 	s.echo.GET("/gists/new", s.handleGistNewPage, authMiddleware.Auth())
@@ -53,7 +53,7 @@ func (s *Server) setupRoutes() {
 	// API v1 routes
 	apiV1 := s.echo.Group("/api/v1")
 	s.setupAPIv1Routes(apiV1)
-	
+
 	// Search routes
 	searchHandler := handlers.NewSearchHandler(s.searchManager, s.config, s.db)
 	searchHandler.RegisterRoutes(apiV1)
@@ -189,10 +189,10 @@ func (s *Server) handle2FASetup(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"secret":         setup.Secret,
-		"url":           setup.URL,
-		"qr_code":       setup.QRCode,
+		"url":            setup.URL,
+		"qr_code":        setup.QRCode,
 		"recovery_codes": recoveryCodes,
-		"enabled":       false,
+		"enabled":        false,
 	})
 }
 
@@ -528,7 +528,7 @@ func (s *Server) handleGetOrganizations(c echo.Context) error {
 	// Get user from token (if authenticated)
 	userID, err := s.auth.GetUserIDFromToken(c)
 	var organizations []models.Organization
-	
+
 	if err != nil {
 		// Public view - only show public organizations
 		if err := s.db.Where("is_public = ?", true).Find(&organizations).Error; err != nil {
@@ -550,7 +550,7 @@ func (s *Server) handleGetOrganizations(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"organizations": organizations,
-		"total":        len(organizations),
+		"total":         len(organizations),
 	})
 }
 
@@ -676,7 +676,7 @@ func (s *Server) handleUpdateOrganization(c echo.Context) error {
 
 	// Check if user is admin/owner
 	var member models.OrganizationMember
-	if err := s.db.Where("organization_id = ? AND user_id = ? AND role IN (?, ?)", 
+	if err := s.db.Where("organization_id = ? AND user_id = ? AND role IN (?, ?)",
 		org.ID, userID, "admin", "owner").First(&member).Error; err != nil {
 		return echo.NewHTTPError(http.StatusForbidden, "Admin access required")
 	}
@@ -746,87 +746,86 @@ func (s *Server) handleAdminGetSystem(c echo.Context) error {
 	return c.JSON(http.StatusNotImplemented, map[string]string{"message": "Admin get system not implemented"})
 }
 
-
 func (s *Server) handleAdminGetAuditLogs(c echo.Context) error {
 	return c.JSON(http.StatusNotImplemented, map[string]string{"message": "Admin get audit logs not implemented"})
 }
 
 func (s *Server) handleSetupWizard(c echo.Context) error {
 	handler := handlers.NewSetupHandler(s.db, s.config, s.auth)
-	
+
 	// Check if setup is already completed - GetStatus handles the response directly
 	// So we don't need to check status here, just continue to render template
-	
+
 	// If this is an HTML request, render the wizard template
-	if c.Request().Header.Get("Accept") != "application/json" && 
-	   !strings.Contains(c.Request().Header.Get("Content-Type"), "application/json") {
-		
+	if c.Request().Header.Get("Accept") != "application/json" &&
+		!strings.Contains(c.Request().Header.Get("Content-Type"), "application/json") {
+
 		// Create step data for template - simplified for now
 		steps := []map[string]interface{}{
 			{
-				"StepNumber": 1,
-				"Title": "Welcome",
+				"StepNumber":  1,
+				"Title":       "Welcome",
 				"Description": "System requirements check",
-				"IsActive": true,
-				"IsComplete": false,
+				"IsActive":    true,
+				"IsComplete":  false,
 			},
 			{
-				"StepNumber": 2,
-				"Title": "Admin Account",
+				"StepNumber":  2,
+				"Title":       "Admin Account",
 				"Description": "Create first administrator",
-				"IsActive": false,
-				"IsComplete": false,
+				"IsActive":    false,
+				"IsComplete":  false,
 			},
 			{
-				"StepNumber": 3,
-				"Title": "Database",
+				"StepNumber":  3,
+				"Title":       "Database",
 				"Description": "Configure database connection",
-				"IsActive": false,
-				"IsComplete": false,
+				"IsActive":    false,
+				"IsComplete":  false,
 			},
 			{
-				"StepNumber": 4,
-				"Title": "Storage",
+				"StepNumber":  4,
+				"Title":       "Storage",
 				"Description": "Configure data storage",
-				"IsActive": false,
-				"IsComplete": false,
+				"IsActive":    false,
+				"IsComplete":  false,
 			},
 			{
-				"StepNumber": 5,
-				"Title": "Server",
+				"StepNumber":  5,
+				"Title":       "Server",
 				"Description": "Server and network settings",
-				"IsActive": false,
-				"IsComplete": false,
+				"IsActive":    false,
+				"IsComplete":  false,
 			},
 			{
-				"StepNumber": 6,
-				"Title": "Email",
+				"StepNumber":  6,
+				"Title":       "Email",
 				"Description": "Email notifications (optional)",
-				"IsActive": false,
-				"IsComplete": false,
+				"IsActive":    false,
+				"IsComplete":  false,
 			},
 			{
-				"StepNumber": 7,
-				"Title": "Security",
+				"StepNumber":  7,
+				"Title":       "Security",
 				"Description": "Security and authentication",
-				"IsActive": false,
-				"IsComplete": false,
+				"IsActive":    false,
+				"IsComplete":  false,
 			},
 			{
-				"StepNumber": 8,
-				"Title": "Complete",
+				"StepNumber":  8,
+				"Title":       "Complete",
 				"Description": "Finish setup",
-				"IsActive": false,
-				"IsComplete": false,
+				"IsActive":    false,
+				"IsComplete":  false,
 			},
 		}
-		
+
 		return c.Render(http.StatusOK, "wizard", map[string]interface{}{
 			"title": "Setup Wizard",
 			"steps": steps,
 		})
 	}
-	
+
 	// Return JSON status for API requests
 	return handler.GetStatus(c)
 }
@@ -851,20 +850,20 @@ func (s *Server) handleGetWebhooks(c echo.Context) error {
 	// Get webhooks for user or organization
 	var webhooks []models.Webhook
 	query := s.db.Where("user_id = ?", userID)
-	
+
 	// Check if organization context
 	if orgName := c.QueryParam("org"); orgName != "" {
 		var org models.Organization
 		if err := s.db.Where("name = ?", orgName).First(&org).Error; err != nil {
 			return echo.NewHTTPError(http.StatusNotFound, "Organization not found")
 		}
-		
+
 		// Check if user is member
 		var member models.OrganizationMember
 		if err := s.db.Where("organization_id = ? AND user_id = ?", org.ID, userID).First(&member).Error; err != nil {
 			return echo.NewHTTPError(http.StatusForbidden, "Access denied")
 		}
-		
+
 		query = s.db.Where("organization_id = ?", org.ID)
 	}
 
@@ -903,7 +902,7 @@ func (s *Server) handleCreateWebhook(c echo.Context) error {
 
 	// Convert events to JSON string
 	eventsJSON := strings.Join(req.Events, ",")
-	
+
 	// Create webhook
 	webhook := models.Webhook{
 		URL:      req.URL,
@@ -919,14 +918,14 @@ func (s *Server) handleCreateWebhook(c echo.Context) error {
 		if err := s.db.Where("name = ?", req.Org).First(&org).Error; err != nil {
 			return echo.NewHTTPError(http.StatusNotFound, "Organization not found")
 		}
-		
+
 		// Check permissions
 		var member models.OrganizationMember
-		if err := s.db.Where("organization_id = ? AND user_id = ? AND role IN (?, ?)", 
+		if err := s.db.Where("organization_id = ? AND user_id = ? AND role IN (?, ?)",
 			org.ID, userID, "admin", "owner").First(&member).Error; err != nil {
 			return echo.NewHTTPError(http.StatusForbidden, "Admin access required")
 		}
-		
+
 		// Note: Current webhook model doesn't support organization ownership
 		// This would need to be added to the model if organization webhooks are needed
 		webhook.UserID = &userID
@@ -1019,7 +1018,7 @@ func (s *Server) handleRawFile(c echo.Context) error {
 
 	c.Response().Header().Set("Content-Type", contentType)
 	c.Response().Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, filename))
-	
+
 	return c.String(http.StatusOK, file.Content)
 }
 
@@ -1067,28 +1066,28 @@ func (s *Server) setupAPIv1Routes(g *echo.Group) {
 
 	// Organization endpoints
 	orgHandler.RegisterRoutes(g)
-	
+
 	// Team endpoints
 	teamHandler.RegisterRoutes(g)
-	
+
 	// Admin endpoints (protected by middleware)
 	adminHandler.RegisterRoutes(g)
-	
+
 	// Setup endpoints
 	setupHandler.RegisterRoutes(g)
-	
+
 	// Migration endpoints (protected by auth)
 	migrationHandler.RegisterRoutes(g)
-	
+
 	// Webhook endpoints (protected by auth)
 	webhookHandler.RegisterRoutes(g)
-	
+
 	// Backup endpoints (protected by admin middleware)
 	backupHandler.RegisterRoutes(g)
-	
+
 	// Compliance endpoints
 	complianceHandler.RegisterRoutes(g)
-	
+
 	// Offline/PWA endpoints
 	offlineHandler.RegisterRoutes(s.echo.Group(""))
 }
@@ -1154,20 +1153,20 @@ func (s *Server) handleHealthz(c echo.Context) error {
 			"email":    "disabled",
 		},
 		"metrics": map[string]interface{}{
-			"total_users":          0,
-			"total_gists":          0,
-			"public_gists":         0,
-			"requests_per_minute":  0,
+			"total_users":           0,
+			"total_gists":           0,
+			"public_gists":          0,
+			"requests_per_minute":   0,
 			"average_response_time": "0ms",
-			"storage_used":         "0B",
-			"storage_available":    "0B",
-			"active_connections":   0,
+			"storage_used":          "0B",
+			"storage_available":     "0B",
+			"active_connections":    0,
 		},
 		"features": map[string]interface{}{
-			"registration":     "enabled",
-			"organizations":    "enabled",
-			"social_features":  "enabled",
-			"search":           "sqlite",
+			"registration":    "enabled",
+			"organizations":   "enabled",
+			"social_features": "enabled",
+			"search":          "sqlite",
 		},
 	}
 
@@ -1361,7 +1360,7 @@ cmd_list() {
 
     # Simple JSON parsing for POSIX shell
     echo "$response" | grep -o '"title":"[^"]*' | cut -d'"' -f4 | while read -r title; do
-        printf "• %s\n" "$title"
+        printf "• %%s\n" "$title"
     done
 }
 
@@ -1425,7 +1424,7 @@ cmd_search() {
 
     # Parse and display results
     echo "$response" | grep -o '"title":"[^"]*' | cut -d'"' -f4 | while read -r title; do
-        printf "• %s\n" "$title"
+        printf "• %%s\n" "$title"
     done
 }
 
@@ -1541,12 +1540,12 @@ func (s *Server) handleRegisterPage(c echo.Context) error {
 func (s *Server) handleGistListPage(c echo.Context) error {
 	// TODO: Get user from auth context
 	// TODO: Get gists from database
-	
+
 	// For now, just render with empty gists
 	// Git operations are optional so we can still show the page
 	return c.Render(http.StatusOK, "gist_list", map[string]interface{}{
-		"Title": "My Gists",
-		"Gists": []interface{}{}, // TODO: Fetch actual gists
+		"Title":  "My Gists",
+		"Gists":  []interface{}{}, // TODO: Fetch actual gists
 		"Filter": c.QueryParam("visibility"),
 	})
 }
@@ -1561,9 +1560,9 @@ func (s *Server) handleGistViewPage(c echo.Context) error {
 	// TODO: Get gist by ID
 	// TODO: Check permissions
 	// TODO: Get comments
-	
+
 	gistID := c.Param("id")
-	
+
 	// Placeholder data
 	gist := map[string]interface{}{
 		"ID":          gistID,
@@ -1586,12 +1585,12 @@ func (s *Server) handleGistViewPage(c echo.Context) error {
 			},
 		},
 	}
-	
+
 	return c.Render(http.StatusOK, "gist_view", map[string]interface{}{
-		"Title":    "View Gist",
-		"Gist":     gist,
-		"Comments": []interface{}{},
-		"IsOwner":  false,
+		"Title":     "View Gist",
+		"Gist":      gist,
+		"Comments":  []interface{}{},
+		"IsOwner":   false,
 		"IsStarred": false,
 	})
 }
